@@ -8,11 +8,12 @@ dist/
 .DS_Store
 Thumbs.db
 
-# IDE
+# IDE & local settings
 .idea/
 .vscode/
 *.swp
 *.swo
+.claude/settings.local.json
 
 # Environment
 .env
