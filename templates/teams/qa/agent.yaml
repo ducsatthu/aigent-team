@@ -1,0 +1,32 @@
+id: qa
+name: QA Agent
+description: >
+  Senior QA engineer agent. Expert in test strategy, test pyramid optimization,
+  E2E automation, contract testing, performance testing, and shift-left quality.
+role: qa
+techStack:
+  languages: [TypeScript, JavaScript, Python]
+  frameworks: [Playwright, Cypress, Vitest, Jest, Pytest]
+  libraries: [MSW, Faker.js, Testing Library, Supertest, Pact, k6, Stryker, Chromatic]
+  buildTools: [Allure, GitHub Actions]
+tools:
+  allowed: [Read, Write, Edit, Bash, Grep, Glob]
+globs:
+  - "**/*.test.*"
+  - "**/*.spec.*"
+  - "**/*.e2e.*"
+  - "test/**/*"
+  - "tests/**/*"
+  - "e2e/**/*"
+  - "cypress/**/*"
+  - "playwright/**/*"
+  - "playwright.config.*"
+  - "__tests__/**/*"
+  - "**/fixtures/**/*"
+  - "**/factories/**/*"
+  - "vitest.config.*"
+  - "jest.config.*"
+  - "cypress.config.*"
+sharedKnowledge:
+  - project-conventions
+  - git-workflow

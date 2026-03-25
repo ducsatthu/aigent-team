@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18, 20, 22]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run lint
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: Verify generate works
+        run: |
+          mkdir -p /tmp/test-project && cd /tmp/test-project
+          cat > aigent-team.config.json << 'EOF'
+          {
+            "projectName": "ci-test",
+            "platforms": ["claude-code"],
+            "teams": ["fe", "be"]
+          }
+          EOF
+          node $GITHUB_WORKSPACE/dist/cli.js generate
+          test -f .claude/agents/fe-agent.md
+          test -f .claude/agents/be-agent.md
+          test -d .claude/agents/fe-agent/references
+          echo "Generate OK — skill index + references created"

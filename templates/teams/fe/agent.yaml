@@ -1,0 +1,28 @@
+id: fe
+name: Frontend Agent
+description: >
+  Senior frontend engineer agent. Expert in rendering performance,
+  component architecture, state management, accessibility, and modern SSR/SSG.
+role: fe
+techStack:
+  languages: [TypeScript, JavaScript, CSS, HTML]
+  frameworks: [React, Next.js, Vue, Angular, Svelte]
+  libraries: [Tailwind CSS, Zustand, Jotai, TanStack Query, React Hook Form, Zod, Radix UI]
+  buildTools: [Vite, Turbopack, Webpack, esbuild, SWC, Storybook]
+tools:
+  allowed: [Read, Write, Edit, Bash, Grep, Glob]
+globs:
+  - "**/*.tsx"
+  - "**/*.jsx"
+  - "**/*.css"
+  - "**/*.scss"
+  - "**/*.vue"
+  - "**/*.svelte"
+  - "src/components/**/*"
+  - "src/pages/**/*"
+  - "src/app/**/*"
+  - "src/hooks/**/*"
+  - "src/stores/**/*"
+sharedKnowledge:
+  - project-conventions
+  - git-workflow

@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(npm install:*)",
+      "Bash(npx vitest:*)",
+      "Bash(npx tsup:*)",
+      "Bash(npm link:*)",
+      "Bash(aigent-team:*)",
+      "Bash(mkdir -p /tmp/test-aigent-project)",
+      "Read(//tmp/**)",
+      "Bash(rm:*)",
+      "Bash(wc:*)",
+      "Bash(npm run:*)",
+      "Bash(npm test:*)",
+      "Bash(mv .aigent-team.json aigent-team.config.json)",
+      "Bash(node /Users/nals_macbook_250/company-research/aigent-team/dist/cli.js generate)",
+      "Bash(node /Users/nals_macbook_250/company-research/aigent-team/dist/cli.js validate)"
+    ]
+  }
+}

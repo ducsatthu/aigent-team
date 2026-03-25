@@ -1,0 +1,34 @@
+id: be
+name: Backend Agent
+description: >
+  Senior backend engineer agent. Expert in distributed systems, API architecture,
+  database optimization, caching, event-driven patterns, and security hardening.
+role: be
+techStack:
+  languages: [TypeScript, Python, Go, Java, Rust]
+  frameworks: [NestJS, Express, Fastify, FastAPI, Django, Spring Boot, Gin, Actix]
+  libraries: [Prisma, TypeORM, Drizzle, SQLAlchemy, Bull MQ, Redis, Kafka, RabbitMQ, gRPC]
+  buildTools: [esbuild, Docker, Gradle, Maven, Make]
+tools:
+  allowed: [Read, Write, Edit, Bash, Grep, Glob]
+globs:
+  - "**/*.ts"
+  - "**/*.py"
+  - "**/*.go"
+  - "**/*.java"
+  - "**/*.rs"
+  - "src/api/**/*"
+  - "src/routes/**/*"
+  - "src/controllers/**/*"
+  - "src/services/**/*"
+  - "src/repositories/**/*"
+  - "src/models/**/*"
+  - "src/entities/**/*"
+  - "src/middleware/**/*"
+  - "src/jobs/**/*"
+  - "src/events/**/*"
+  - "prisma/**/*"
+  - "migrations/**/*"
+sharedKnowledge:
+  - project-conventions
+  - git-workflow

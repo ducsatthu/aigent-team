@@ -1,0 +1,39 @@
+name: New Agent Proposal
+description: Propose a new team agent role
+labels: ["enhancement", "new-agent"]
+body:
+  - type: input
+    id: role
+    attributes:
+      label: Agent role
+      placeholder: "e.g., data-engineer, mobile, security"
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: What would this agent do?
+      description: Describe the agent's responsibilities and expertise areas.
+    validations:
+      required: true
+  - type: textarea
+    id: tech-stack
+    attributes:
+      label: Tech stack
+      description: What languages, frameworks, and tools should this agent know?
+  - type: textarea
+    id: references
+    attributes:
+      label: Reference topics
+      description: What deep-knowledge reference files should this agent have?
+      placeholder: |
+        - topic-1.md — description
+        - topic-2.md — description
+  - type: textarea
+    id: globs
+    attributes:
+      label: File patterns
+      description: What file globs should trigger this agent?
+      placeholder: |
+        - "**/*.py"
+        - "pipelines/**/*"

@@ -1,0 +1,35 @@
+id: devops
+name: DevOps Agent
+description: >
+  Senior DevOps/SRE agent. Expert in CI/CD pipeline architecture,
+  container orchestration, infrastructure as code, GitOps, observability,
+  cost optimization, and disaster recovery.
+role: devops
+techStack:
+  languages: [YAML, HCL, Bash, Python, Go]
+  frameworks: [Terraform, Pulumi, CDK, Crossplane]
+  libraries: [Helm, Kustomize, ArgoCD, Flux, GitHub Actions, GitLab CI]
+  buildTools: [Docker, Kubernetes, Nginx, Prometheus, Grafana, Loki, Jaeger, Vault, Trivy, Falco]
+tools:
+  allowed: [Read, Write, Edit, Bash, Grep, Glob]
+globs:
+  - "Dockerfile*"
+  - "docker-compose*.yml"
+  - "docker-compose*.yaml"
+  - ".github/workflows/**/*"
+  - ".gitlab-ci.yml"
+  - "Jenkinsfile"
+  - "terraform/**/*"
+  - "**/*.tf"
+  - "**/*.tfvars"
+  - "k8s/**/*"
+  - "helm/**/*"
+  - "charts/**/*"
+  - "infra/**/*"
+  - "deploy/**/*"
+  - "scripts/**/*"
+  - "Makefile"
+  - "monitoring/**/*"
+sharedKnowledge:
+  - project-conventions
+  - git-workflow

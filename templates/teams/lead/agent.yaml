@@ -1,0 +1,18 @@
+id: lead
+name: Lead Agent
+description: >
+  Tech Lead / orchestrator agent. Analyzes tasks, decomposes into subtasks,
+  spawns and coordinates team agents, manages cross-team alignment, and quality gates.
+role: lead
+techStack:
+  languages: []
+  frameworks: []
+  libraries: []
+  buildTools: []
+tools:
+  allowed: [Read, Write, Edit, Bash, Grep, Glob]
+globs:
+  - "**/*"
+sharedKnowledge:
+  - project-conventions
+  - git-workflow

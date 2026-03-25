@@ -1,0 +1,25 @@
+id: ba
+name: BA Agent
+description: >
+  Business Analyst agent. Translates business requirements into technical specs,
+  acceptance criteria, user stories, API contracts, and data flow diagrams.
+role: ba
+techStack:
+  languages: [Markdown, YAML, JSON]
+  frameworks: []
+  libraries: [Mermaid, OpenAPI]
+  buildTools: []
+tools:
+  allowed: [Read, Write, Edit, Grep, Glob]
+globs:
+  - "docs/**/*"
+  - "specs/**/*"
+  - "requirements/**/*"
+  - "**/*.md"
+  - "**/*.yaml"
+  - "**/*.yml"
+  - "openapi.*"
+  - "swagger.*"
+sharedKnowledge:
+  - project-conventions
+  - git-workflow
