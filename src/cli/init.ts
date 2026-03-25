@@ -60,6 +60,8 @@ export async function runInit(cwd: string = process.cwd()) {
       name: 'teams',
       message: 'Team agents to enable:',
       choices: [
+        { name: 'Lead (Tech Lead / Orchestrator)', value: 'lead', checked: true },
+        { name: 'BA (Business Analyst)', value: 'ba', checked: true },
         { name: 'FE (Frontend)', value: 'fe', checked: true },
         { name: 'BE (Backend)', value: 'be', checked: true },
         { name: 'QA (Testing)', value: 'qa', checked: true },

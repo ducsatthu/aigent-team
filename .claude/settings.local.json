@@ -15,7 +15,8 @@
       "Bash(npm test:*)",
       "Bash(mv .aigent-team.json aigent-team.config.json)",
       "Bash(node /Users/nals_macbook_250/company-research/aigent-team/dist/cli.js generate)",
-      "Bash(node /Users/nals_macbook_250/company-research/aigent-team/dist/cli.js validate)"
+      "Bash(node /Users/nals_macbook_250/company-research/aigent-team/dist/cli.js validate)",
+      "Bash(npm pack:*)"
     ]
   }
 }
