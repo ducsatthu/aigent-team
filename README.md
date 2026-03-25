@@ -199,6 +199,85 @@ GEMINI.md                                 # Agent overview
 ...
 ```
 
+## How agents are loaded by each platform
+
+After `aigent-team generate`, the files are placed in each platform's expected directories. Here's how each AI tool discovers and uses them:
+
+### Claude Code
+
+Files in `.claude/agents/` are **automatically available** as specialized agents. Claude Code discovers them on startup.
+
+**How to use:**
+```
+# In Claude Code, just ask — it will pick the right agent based on the task
+> Review this React component for accessibility issues
+  → Claude spawns fe-agent, which reads references/accessibility.md
+
+# Or explicitly request an agent
+> Use the fe-agent to review my frontend code
+> Ask the qa-agent to write E2E tests for this feature
+
+# The Lead agent can orchestrate multiple agents
+> Implement the user registration feature
+  → Lead analyzes → spawns BA (specs) → FE + BE (code) → QA (tests)
+```
+
+`CLAUDE.md` is loaded as project context automatically — it tells Claude which agents are available.
+
+### Cursor
+
+Files in `.cursor/rules/` are **loaded automatically** based on frontmatter settings:
+- `alwaysApply: true` → always active (Lead, BA agents)
+- `globs: "**/*.tsx, **/*.ts"` → activated when you open matching files
+
+**How it works:** When you open a `.tsx` file, Cursor loads `fe-agent.mdc` automatically. The agent's knowledge applies to Cursor's suggestions, completions, and chat responses. Reference files in `fe-refs/` are also glob-scoped and loaded when relevant.
+
+No manual action needed — just open files and use Cursor as normal.
+
+### Codex (OpenAI)
+
+`AGENTS.md` is **read automatically** as the project instruction file. Individual agents in `.codex/agents/` are available as subagents.
+
+**How to use:**
+```
+# Codex reads AGENTS.md on startup for project context
+# Use subagents in conversations:
+> @fe-agent review this component
+> @devops-agent check my Dockerfile
+```
+
+### Antigravity (Google)
+
+`GEMINI.md` is loaded as project context. Skills in `.agents/skills/` are **auto-discovered**.
+
+**How to use:**
+```
+# Antigravity loads skills from .agents/skills/ automatically
+# Reference the skill by name:
+> Use the fe-agent skill to review this code
+> Run the qa-agent skill to generate tests
+```
+
+### Reference files — on-demand loading
+
+Reference files are **not** loaded into context by default (that would bloat the context window). Instead:
+
+1. The **skill index** (always loaded) contains a table of available references
+2. When the agent encounters a relevant task, it **reads the reference file** on-demand
+3. Example: FE agent working on forms → reads `references/forms.md` for validation patterns
+
+This is why the skill index includes a "When to read" table:
+
+```markdown
+| Reference | When to read |
+|-----------|-------------|
+| component-architecture.md | Creating or reviewing components |
+| state-management.md | Choosing state solution |
+| performance.md | Optimizing or auditing performance |
+```
+
+The agent decides which references to load based on the task — you don't need to do anything manually.
+
 ## What to commit
 
 Generated files **should be committed** to your repo — they are the actual agent configs your AI tools read. Add this to your workflow:
