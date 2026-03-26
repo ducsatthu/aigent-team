@@ -1,0 +1,62 @@
+---
+description: "QA Agent skill: generate test data"
+alwaysApply: false
+globs: "**/*.test.*, **/*.spec.*, **/*.e2e.*, test/**/*, tests/**/*, e2e/**/*, cypress/**/*, playwright/**/*, playwright.config.*, __tests__/**/*, **/fixtures/**/*, **/factories/**/*, vitest.config.*, jest.config.*, cypress.config.*"
+---
+
+# Skill: Generate Test Data
+
+**Trigger**: When setting up test fixtures, creating seed data for E2E tests, or testing edge cases and boundary conditions.
+
+## Steps
+
+1. **Analyze data requirements**:
+   - Read the schema/types for entities involved
+   - Identify required fields, constraints (unique, foreign keys, enums)
+   - Identify edge cases: empty strings, max-length values, unicode, special characters
+
+2. **Create factory functions** — Use the project's factory pattern:
+   ```typescript
+   // Example with factory pattern
+   function createUser(overrides?: Partial<User>): User {
+     return {
+       id: crypto.randomUUID(),
+       name: `Test User ${Date.now()}`,
+       email: `test-${Date.now()}@example.com`,
+       role: 'user',
+       createdAt: new Date(),
+       ...overrides,
+     };
+   }
+   ```
+
+3. **Generate edge case data sets**:
+   - **Boundary values**: empty string, 1 char, max length
+   - **Unicode**: emoji, CJK characters, RTL text, zero-width characters
+   - **Numeric edges**: 0, -1, MAX_SAFE_INTEGER, NaN, Infinity
+   - **Date edges**: epoch, far future, timezone boundaries, DST transitions
+   - **Null/undefined**: every nullable field tested with null
+
+4. **Create relationship data** — For entities with foreign keys:
+   - Build parent entities before children
+   - Create both happy-path and orphan scenarios
+   - Test cascade delete/update behavior
+
+5. **Seed data for E2E**:
+   ```typescript
+   async function seedTestDatabase() {
+     const admin = await createUser({ role: 'admin' });
+     const users = await Promise.all(
+       Array.from({ length: 10 }, () => createUser())
+     );
+     // Create related entities...
+     return { admin, users };
+   }
+   ```
+
+## Expected Output
+
+- Factory functions for each entity involved
+- Edge case data sets organized by category
+- Seed script for E2E test environment
+- Cleanup function to reset test data after runs

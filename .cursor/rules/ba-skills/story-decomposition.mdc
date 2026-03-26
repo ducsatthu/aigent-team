@@ -1,0 +1,53 @@
+---
+description: "BA Agent skill: story decomposition"
+alwaysApply: false
+globs: "docs/**/*, specs/**/*, requirements/**/*, **/*.md, **/*.yaml, **/*.yml, openapi.*, swagger.*"
+---
+
+# Skill: Story Decomposition
+
+**Trigger**: When breaking an epic or large feature into implementable user stories.
+
+## Steps
+
+1. **Understand the epic**:
+   - What is the business goal?
+   - Who are the users/personas involved?
+   - What is the scope boundary? (what's in, what's explicitly out)
+
+2. **Identify user workflows**:
+   - Map the primary user journey (happy path)
+   - Map alternative paths (edge cases, error scenarios)
+   - Map admin/system workflows (background jobs, notifications)
+
+3. **Slice vertically** — Each story should deliver user-visible value:
+   - **Bad**: "Create database schema", "Build API", "Build UI" (horizontal slices)
+   - **Good**: "User can register with email", "User can reset password" (vertical slices)
+   - Each story should be independently deployable and testable
+
+4. **Apply INVEST criteria** to each story:
+   - **I**ndependent: can be developed without other stories
+   - **N**egotiable: details can be discussed
+   - **V**aluable: delivers value to user or business
+   - **E**stimable: team can estimate the effort
+   - **S**mall: fits in one sprint (ideally 1-3 days of work)
+   - **T**estable: has clear acceptance criteria
+
+5. **Write acceptance criteria** for each story:
+   ```
+   Given [precondition]
+   When [action]
+   Then [expected result]
+   ```
+
+6. **Define dependencies and order**:
+   - Which stories must be done first?
+   - Which can be parallelized?
+   - Where are the integration points between FE/BE?
+
+## Expected Output
+
+- List of user stories with title, description, and acceptance criteria
+- Dependency graph showing implementation order
+- Estimation notes (complexity, unknowns, risks)
+- API contract drafts for stories involving FE+BE integration

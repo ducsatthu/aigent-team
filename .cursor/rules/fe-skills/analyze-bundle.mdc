@@ -1,0 +1,48 @@
+---
+description: "Frontend Agent skill: analyze bundle"
+alwaysApply: false
+globs: "**/*.tsx, **/*.jsx, **/*.css, **/*.scss, **/*.vue, **/*.svelte, src/components/**/*, src/pages/**/*, src/app/**/*, src/hooks/**/*, src/stores/**/*"
+---
+
+# Skill: Analyze Bundle Size
+
+**Trigger**: When adding new dependencies, investigating slow page loads, or performing a performance audit.
+
+## Steps
+
+1. **Check current bundle** — Run the project's build with analysis:
+   ```bash
+   # Next.js
+   ANALYZE=true npx next build
+   # Vite
+   npx vite build --report
+   # Webpack
+   npx webpack-bundle-analyzer dist/stats.json
+   ```
+
+2. **Identify large dependencies** — Look for packages > 50KB gzipped:
+   ```bash
+   npx source-map-explorer dist/**/*.js --json | jq '.results[] | select(.totalBytes > 51200)'
+   ```
+
+3. **Check for duplicates** — Multiple versions of the same package:
+   ```bash
+   npx depcheck
+   npm ls --all | grep -E "deduped|invalid"
+   ```
+
+4. **Evaluate alternatives** — For each large dependency:
+   - Can it be lazy-loaded with `dynamic()` or `React.lazy()`?
+   - Is there a lighter alternative (e.g., `date-fns` vs `moment`)?
+   - Can tree-shaking be improved by changing import style?
+
+5. **Measure impact** — Compare before/after:
+   - Total JS transferred (gzipped)
+   - Largest chunk size
+   - Number of chunks
+
+## Expected Output
+
+- Table of top 10 largest dependencies with sizes
+- Specific recommendations (lazy-load, replace, tree-shake)
+- Before/after size comparison if changes were made

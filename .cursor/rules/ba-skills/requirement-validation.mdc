@@ -1,0 +1,48 @@
+---
+description: "BA Agent skill: requirement validation"
+alwaysApply: false
+globs: "docs/**/*, specs/**/*, requirements/**/*, **/*.md, **/*.yaml, **/*.yml, openapi.*, swagger.*"
+---
+
+# Skill: Requirement Validation
+
+**Trigger**: When validating that requirements are complete, consistent, and implementable before development starts.
+
+## Steps
+
+1. **Completeness check** — For each requirement:
+   - Is the "who" defined? (which user persona)
+   - Is the "what" specific? (observable behavior, not vague goals)
+   - Is the "why" stated? (business value or user need)
+   - Are error scenarios covered? (what happens when things go wrong)
+   - Are boundary conditions defined? (limits, edge cases, empty states)
+
+2. **Consistency check** — Across all requirements:
+   - Do any requirements contradict each other?
+   - Are terms used consistently? (same entity name everywhere)
+   - Do data types and formats match between related requirements?
+   - Are permissions/roles consistent across features?
+
+3. **Feasibility check** — With the technical team:
+   - Can each requirement be implemented within the current architecture?
+   - Are there technical constraints that limit the requirement?
+   - Are third-party dependencies available and reliable?
+   - Is the performance target achievable with current infrastructure?
+
+4. **Testability check** — For each acceptance criterion:
+   - Can it be verified automatically?
+   - Is the expected result measurable and unambiguous?
+   - Is the precondition reproducible in a test environment?
+
+5. **Gap analysis** — Identify what's missing:
+   - Non-functional requirements (performance, security, accessibility)
+   - Error handling and recovery flows
+   - Data migration needs (if changing existing behavior)
+   - Internationalization / localization considerations
+
+## Expected Output
+
+- Validation report: pass/fail per requirement
+- List of gaps and missing requirements
+- Contradictions or ambiguities found
+- Questions for stakeholders to resolve before development
