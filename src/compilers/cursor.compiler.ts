@@ -45,6 +45,23 @@ export class CursorCompiler extends BaseCompiler {
           });
         }
       }
+
+      // Generate skill files as glob-scoped .mdc rules
+      if (agent.skills?.length) {
+        for (const skill of agent.skills) {
+          const skillFrontmatter = this.formatFrontmatter({
+            description: `${agent.name} skill: ${skill.name}`,
+            alwaysApply: false,
+            globs: globs || undefined,
+          });
+
+          outputs.push({
+            filePath: `.cursor/rules/${agent.id}-skills/${skill.id}.mdc`,
+            content: `${skillFrontmatter}\n\n${skill.content}\n`,
+            overwriteStrategy: 'replace',
+          });
+        }
+      }
     }
 
     // Shared conventions rule (always applied)

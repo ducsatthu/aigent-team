@@ -1,0 +1,89 @@
+---
+description: "Backend Agent reference: observability"
+alwaysApply: false
+globs: "**/*.ts, **/*.py, **/*.go, **/*.java, **/*.rs, src/api/**/*, src/routes/**/*, src/controllers/**/*, src/services/**/*, src/repositories/**/*, src/models/**/*, src/entities/**/*, src/middleware/**/*, src/jobs/**/*, src/events/**/*, prisma/**/*, migrations/**/*"
+---
+
+# Observability
+
+## Three Pillars
+
+### 1. Structured Logging
+
+Every log entry must include:
+```json
+{
+  "timestamp": "2024-01-15T10:30:00.000Z",
+  "level": "info",
+  "message": "Order created",
+  "service": "order-service",
+  "environment": "production",
+  "request_id": "req_abc123",
+  "user_id": "usr_456",
+  "duration_ms": 45,
+  "order_id": "ord_789"
+}
+```
+
+**Log levels:**
+- `ERROR`: Something broke, requires investigation. Pages on-call in production.
+- `WARN`: Unexpected but handled. Rate limit hit, cache miss on hot key, slow query.
+- `INFO`: Significant business events: user registered, order placed, payment processed.
+- `DEBUG`: Development only. Never enable in production (performance + noise).
+
+**Never log:** passwords, tokens, credit card numbers, full email addresses, session IDs.
+
+### 2. Distributed Tracing
+
+- Propagate trace context (`traceparent` header) across all service calls
+- Every outgoing HTTP, gRPC, queue message carries the trace ID
+- Instrument: incoming requests, outgoing HTTP calls, database queries, cache operations, queue publish/consume
+- Sample rate: 100% for errors, 10% for success in production
+
+### 3. Metrics (Prometheus format)
+
+Essential metrics to expose:
+- `http_requests_total{method, path, status}` — request rate
+- `http_request_duration_seconds{method, path}` — latency histogram (p50, p95, p99)
+- `http_requests_in_flight` — active connections
+- `db_query_duration_seconds{query}` — database latency
+- `cache_hits_total` / `cache_misses_total` — cache effectiveness
+- `queue_depth{queue}` — backlog size
+- `circuit_breaker_state{service}` — open/closed/half-open
+
+## Alerting
+
+**Alert on symptoms (user impact), not causes:**
+- GOOD: "Error rate > 1% for 5 minutes"
+- BAD: "CPU > 80%" (might be normal)
+- GOOD: "p99 latency > 2s for 10 minutes"
+- BAD: "Memory > 70%" (might be normal for JVM)
+
+**Severity levels:**
+| Level | Action | Example |
+|-------|--------|---------|
+| P1 Critical | Page on-call NOW | Error rate > 5%, service down |
+| P2 High | Slack team channel | Error rate > 1%, p99 > 2x baseline |
+| P3 Medium | Create ticket | Disk > 80%, cert expires in 14d |
+| P4 Low | Dashboard only | Cost anomaly, deprecation warning |
+
+Every P1/P2 alert must have a runbook.
+
+## Request Tracing Pattern
+
+```typescript
+// Middleware: create request context
+app.use((req, res, next) => {
+  req.id = req.headers['x-request-id'] || crypto.randomUUID();
+  res.setHeader('x-request-id', req.id);
+  next();
+});
+
+// Logger: auto-include request context
+const logger = createLogger({
+  defaultMeta: { service: 'api', env: process.env.NODE_ENV },
+});
+
+// Usage: always include request_id
+logger.info({ request_id: req.id, user_id: user.id }, 'Order created');
+```

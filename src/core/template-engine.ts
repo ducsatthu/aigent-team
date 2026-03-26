@@ -1,4 +1,4 @@
-import type { AgentDefinition, ReferenceFile } from './types.js';
+import type { AgentDefinition, ReferenceFile, SkillFile } from './types.js';
 
 /**
  * Assemble the slim skill index for an agent (~150-200 lines).
@@ -7,13 +7,37 @@ import type { AgentDefinition, ReferenceFile } from './types.js';
  * Otherwise, fall back to legacy assembly from parts.
  */
 export function assembleSkillIndex(agent: AgentDefinition): string {
-  // If skill.md exists, use it as-is (it's already the curated slim index)
-  if (agent.skillContent) {
-    return agent.skillContent;
+  const parts: string[] = [];
+
+  // Rules go first — they are hard constraints, must be prominent
+  if (agent.rulesContent) {
+    parts.push(agent.rulesContent);
   }
 
-  // Legacy fallback: assemble from parts (for backward compat)
-  return assembleAgentMarkdown(agent);
+  // Then skill content (or legacy fallback)
+  if (agent.skillContent) {
+    parts.push(agent.skillContent);
+  } else {
+    parts.push(assembleAgentMarkdown(agent));
+  }
+
+  // Skills catalog table (if any skills exist)
+  if (agent.skills?.length) {
+    const skillLines = agent.skills.map(
+      (s) => `| \`${s.id}\` | ${s.name} |`
+    );
+    parts.push([
+      '## Executable Skills',
+      '',
+      'Load the relevant skill file when performing these procedures:',
+      '',
+      '| Skill | Name |',
+      '|-------|------|',
+      ...skillLines,
+    ].join('\n'));
+  }
+
+  return parts.join('\n\n');
 }
 
 /**
@@ -70,4 +94,11 @@ export function assembleAgentMarkdown(agent: AgentDefinition): string {
  */
 export function assembleReference(ref: ReferenceFile): string {
   return ref.content;
+}
+
+/**
+ * Format a single skill file for output.
+ */
+export function assembleSkill(skill: SkillFile): string {
+  return skill.content;
 }

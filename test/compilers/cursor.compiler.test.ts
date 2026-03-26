@@ -19,6 +19,9 @@ const mockAgent: AgentDefinition = {
   tools: { allowed: ['Read', 'Write', 'Bash'] },
   workflows: [],
   sharedKnowledge: ['Shared conventions'],
+  references: [],
+  rulesContent: '',
+  skills: [],
   globs: ['**/*.ts', 'src/api/**/*'],
 };
 

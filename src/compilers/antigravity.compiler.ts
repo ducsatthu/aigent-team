@@ -68,6 +68,13 @@ export class AntigravityCompiler extends BaseCompiler {
         `.agents/skills/${agent.id}-agent/references`,
       );
       outputs.push(...refs);
+
+      // Generate skill files
+      const skills = this.compileSkills(
+        agent,
+        `.agents/skills/${agent.id}-agent/skills`,
+      );
+      outputs.push(...skills);
     }
 
     return outputs;

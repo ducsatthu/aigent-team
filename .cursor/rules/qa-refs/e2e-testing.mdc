@@ -1,0 +1,298 @@
+---
+description: "QA Agent reference: e2e testing"
+alwaysApply: false
+globs: "**/*.test.*, **/*.spec.*, **/*.e2e.*, test/**/*, tests/**/*, e2e/**/*, cypress/**/*, playwright/**/*, playwright.config.*, __tests__/**/*, **/fixtures/**/*, **/factories/**/*, vitest.config.*, jest.config.*, cypress.config.*"
+---
+
+# E2E Testing Reference
+
+## Page Object Model
+
+Encapsulate page interactions behind a stable API. Tests read like user stories;
+selectors and waits live in one place.
+
+### Structure
+
+```
+e2e/
+  pages/
+    login.page.ts
+    dashboard.page.ts
+    checkout.page.ts
+  fixtures/
+    auth.fixture.ts
+  specs/
+    checkout.spec.ts
+```
+
+### Page Object Example (Playwright)
+
+```typescript
+// e2e/pages/checkout.page.ts
+import { type Page, type Locator } from '@playwright/test';
+
+export class CheckoutPage {
+  private readonly cartItems: Locator;
+  private readonly promoCodeInput: Locator;
+  private readonly applyPromoButton: Locator;
+  private readonly totalPrice: Locator;
+  private readonly placeOrderButton: Locator;
+
+  constructor(private readonly page: Page) {
+    this.cartItems = page.getByRole('list', { name: 'Cart items' }).getByRole('listitem');
+    this.promoCodeInput = page.getByLabel('Promo code');
+    this.applyPromoButton = page.getByRole('button', { name: 'Apply' });
+    this.totalPrice = page.getByTestId('total-price');
+    this.placeOrderButton = page.getByRole('button', { name: 'Place order' });
+  }
+
+  async applyPromoCode(code: string) {
+    await this.promoCodeInput.fill(code);
+    await this.applyPromoButton.click();
+  }
+
+  async placeOrder() {
+    await this.placeOrderButton.click();
+    await this.page.waitForURL('**/confirmation');
+  }
+
+  async getTotal(): Promise<string> {
+    return this.totalPrice.textContent() ?? '';
+  }
+
+  async getItemCount(): Promise<number> {
+    return this.cartItems.count();
+  }
+}
+```
+
+### Test Using Page Object
+
+```typescript
+// e2e/specs/checkout.spec.ts
+import { test, expect } from '@playwright/test';
+import { CheckoutPage } from '../pages/checkout.page';
+
+test.describe('Checkout', () => {
+  let checkout: CheckoutPage;
+
+  test.beforeEach(async ({ page }) => {
+    // Seed cart via API — never through UI
+    await page.request.post('/api/test/seed-cart', {
+      data: { items: [{ sku: 'WIDGET-1', qty: 2 }] },
+    });
+    await page.goto('/checkout');
+    checkout = new CheckoutPage(page);
+  });
+
+  test('applies promo code and updates total', async () => {
+    await checkout.applyPromoCode('SAVE20');
+    await expect(checkout.getTotal()).resolves.toContain('$16.00');
+  });
+});
+```
+
+---
+
+## Element Selection Priority
+
+Use the most accessible selector available. Order of preference:
+
+1. **`getByRole`** — matches what assistive technology sees.
+   `page.getByRole('button', { name: 'Submit' })`
+2. **`getByLabel`** — form fields with proper labels.
+   `page.getByLabel('Email address')`
+3. **`getByPlaceholder`** — fallback for unlabelled inputs.
+4. **`getByText`** — visible text content.
+5. **`getByTestId`** — last resort; requires `data-testid` attribute.
+
+Never use CSS selectors or XPath tied to DOM structure. They break on
+refactors and provide no accessibility signal.
+
+---
+
+## Wait Strategy
+
+### Rule: Never Use Fixed Delays
+
+```typescript
+// BAD — arbitrary delay, still flaky
+await page.waitForTimeout(3000);
+
+// GOOD — wait for specific condition
+await page.waitForSelector('[data-loaded="true"]');
+await expect(page.getByText('Order confirmed')).toBeVisible();
+```
+
+### Playwright Auto-Waiting
+
+Playwright auto-waits for elements to be actionable before interacting.
+Lean on this. Additional explicit waits for:
+
+- **Navigation**: `await page.waitForURL('**/dashboard')`
+- **Network idle**: `await page.waitForLoadState('networkidle')` (use
+  sparingly — prefer waiting for specific elements)
+- **API response**: `await page.waitForResponse(resp => resp.url().includes('/api/orders') && resp.status() === 200)`
+- **Custom condition**: `await expect(locator).toHaveCount(3)`
+
+### Timeout Configuration
+
+```typescript
+// playwright.config.ts
+export default defineConfig({
+  timeout: 30_000,        // per-test timeout
+  expect: {
+    timeout: 5_000,       // per-assertion timeout
+  },
+  use: {
+    actionTimeout: 10_000, // per-action timeout (click, fill, etc.)
+    navigationTimeout: 15_000,
+  },
+});
+```
+
+---
+
+## Test Data Setup via API
+
+Never create test data through the UI. It is slow, brittle, and couples
+tests to unrelated pages.
+
+### Pattern: API Seeding
+
+```typescript
+test.beforeEach(async ({ page }) => {
+  // Create user and get auth token
+  const res = await page.request.post('/api/test/users', {
+    data: { email: 'qa@test.com', role: 'admin' },
+  });
+  const { token } = await res.json();
+
+  // Set auth cookie/header
+  await page.context().addCookies([{
+    name: 'auth_token',
+    value: token,
+    domain: 'localhost',
+    path: '/',
+  }]);
+});
+```
+
+### Pattern: Storage State for Auth
+
+```typescript
+// e2e/fixtures/auth.fixture.ts — run once, reuse across tests
+import { test as setup } from '@playwright/test';
+
+setup('authenticate', async ({ page }) => {
+  await page.goto('/login');
+  await page.getByLabel('Email').fill('admin@test.com');
+  await page.getByLabel('Password').fill('test-password');
+  await page.getByRole('button', { name: 'Sign in' }).click();
+  await page.waitForURL('**/dashboard');
+  await page.context().storageState({ path: '.auth/admin.json' });
+});
+
+// playwright.config.ts
+export default defineConfig({
+  projects: [
+    { name: 'setup', testMatch: /auth\.fixture\.ts/ },
+    {
+      name: 'tests',
+      dependencies: ['setup'],
+      use: { storageState: '.auth/admin.json' },
+    },
+  ],
+});
+```
+
+---
+
+## Parallel Execution Safety
+
+Playwright runs tests in parallel by default. Tests must be fully isolated:
+
+- **No shared database rows.** Each test creates its own data with unique IDs.
+- **No shared files.** Use temp directories or unique filenames.
+- **No port conflicts.** Use dynamic ports or separate server instances.
+- **No sequential assumptions.** Never rely on test execution order.
+
+If a test cannot be parallelised (e.g., it modifies global settings), mark it:
+
+```typescript
+test.describe.serial('Admin settings', () => {
+  // These tests run sequentially within this describe block
+});
+```
+
+---
+
+## Flakiness Prevention
+
+### Common Causes and Fixes
+
+| Cause | Detection | Fix |
+|---|---|---|
+| Race condition (element not ready) | Passes locally, fails in CI | Replace `waitForTimeout` with explicit waits |
+| Shared test state | Fails when run order changes | Isolate data per test |
+| Animation interfering with click | Intermittent click misses | Disable animations in test config |
+| Viewport-dependent layout | Fails on different screen sizes | Set fixed viewport in config |
+| Third-party dependency | Flaky external API | Mock external services in E2E |
+| Time-dependent logic | Fails at midnight/month-end | Mock clock or use stable test dates |
+
+### Playwright Anti-Flake Config
+
+```typescript
+// playwright.config.ts
+export default defineConfig({
+  retries: process.env.CI ? 2 : 0,  // Retries hide flakiness locally
+  use: {
+    video: 'retain-on-failure',
+    screenshot: 'only-on-failure',
+    trace: 'retain-on-failure',
+  },
+});
+```
+
+### Flakiness Detection
+
+Run suspect tests in a loop locally before merging:
+
+```bash
+npx playwright test checkout.spec.ts --repeat-each=20
+```
+
+If it fails once in 20, it is flaky. Fix before merging.
+
+---
+
+## Screenshot and Trace on Failure
+
+Always capture artifacts on failure for debugging:
+
+```typescript
+// playwright.config.ts
+export default defineConfig({
+  use: {
+    screenshot: 'only-on-failure',
+    video: 'retain-on-failure',
+    trace: 'retain-on-failure',
+  },
+  outputDir: 'test-results/',
+});
+```
+
+In CI, upload the `test-results/` directory as a build artifact:
+
+```yaml
+# GitHub Actions
+- uses: actions/upload-artifact@v4
+  if: failure()
+  with:
+    name: playwright-results
+    path: test-results/
+    retention-days: 7
+```
+
+Traces can be viewed at https://trace.playwright.dev — share the link in
+bug reports for full reproduction context.

@@ -18,6 +18,16 @@ export interface ReferenceFile {
   content: string;
 }
 
+// ---- Skill File (on-demand executable procedure) ----
+
+export interface SkillFile {
+  id: string;
+  name: string;
+  description: string;
+  trigger: string;
+  content: string;
+}
+
 // ---- Agent Definition (Single Source of Truth) ----
 
 export interface TechStackConfig {
@@ -52,6 +62,8 @@ export interface AgentDefinition {
   workflows: WorkflowDefinition[];
   sharedKnowledge: string[];
   references: ReferenceFile[];
+  rulesContent: string;
+  skills: SkillFile[];
   globs?: string[];
 }
 
@@ -75,6 +87,7 @@ export const AgentOverrideSchema = z.object({
     allowed: z.array(z.string()).optional(),
     denied: z.array(z.string()).optional(),
   }).optional(),
+  rules: z.string().optional(),
   globs: z.array(z.string()).optional(),
 });
 

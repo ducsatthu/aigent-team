@@ -57,6 +57,13 @@ export class CodexCompiler extends BaseCompiler {
         `.codex/agents/${agent.id}-agent/references`,
       );
       outputs.push(...refs);
+
+      // Generate skill files
+      const skills = this.compileSkills(
+        agent,
+        `.codex/agents/${agent.id}-agent/skills`,
+      );
+      outputs.push(...skills);
     }
 
     return outputs;

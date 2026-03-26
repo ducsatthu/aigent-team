@@ -1,0 +1,224 @@
+# Monitoring and Observability Reference
+
+## Three Pillars
+
+### 1. Metrics (Prometheus / Grafana)
+
+Numeric measurements aggregated over time. Best for dashboards and alerting.
+
+- **Counter**: Monotonically increasing (requests_total, errors_total).
+- **Gauge**: Point-in-time value (active_connections, queue_depth).
+- **Histogram**: Distribution of values (request_duration_seconds).
+
+### 2. Logs (Loki / ELK / CloudWatch)
+
+Timestamped text records of discrete events. Best for debugging specific
+incidents.
+
+- Structured JSON only — no unstructured text logs.
+- Include: timestamp, level, service, trace_id, message, context fields.
+- Exclude: PII, secrets, full request/response bodies.
+
+### 3. Traces (Jaeger / Tempo / X-Ray)
+
+End-to-end request flow across services. Best for understanding latency
+and dependencies.
+
+- Instrument all service boundaries (HTTP, gRPC, message queues).
+- Propagate trace context headers (`traceparent` / W3C Trace Context).
+- Sample at 1-10% in production (100% in dev/staging).
+
+---
+
+## Golden Signals Dashboard
+
+Every service must have a dashboard showing the four golden signals:
+
+| Signal | Metric | Example PromQL |
+|---|---|---|
+| **Latency** | Request duration (p50, p90, p99) | `histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m]))` |
+| **Traffic** | Requests per second | `rate(http_requests_total[5m])` |
+| **Errors** | Error rate (%) | `rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) * 100` |
+| **Saturation** | CPU/memory/queue utilization | `container_memory_working_set_bytes / container_spec_memory_limit_bytes * 100` |
+
+### Dashboard Requirements
+
+- Every service has a dedicated Grafana dashboard.
+- Dashboard definition stored in Git (JSON model or Grafonnet).
+- Include: golden signals, resource usage, key business metrics.
+- Time range selectors: last 1h, 6h, 24h, 7d.
+- Variable selectors: environment, namespace, pod.
+
+---
+
+## Alert Severity Levels
+
+| Level | Criteria | Response Time | Notification | Example |
+|---|---|---|---|---|
+| **P1 — Critical** | Customer-facing outage, data loss risk | 5 min | Page on-call, auto-create incident | API error rate > 10%, database down |
+| **P2 — High** | Degraded performance, partial outage | 15 min | Page on-call | p99 latency > 5s, disk > 90% |
+| **P3 — Warning** | Approaching threshold, non-critical issue | 1 hour | Slack channel | Disk > 80%, certificate expiry < 14d |
+| **P4 — Info** | Anomaly, needs investigation during business hours | Next business day | Slack channel | Unusual traffic spike, dependency slow |
+
+### Alert Rules
+
+```yaml
+# Prometheus alert example
+groups:
+  - name: user-api
+    rules:
+      - alert: HighErrorRate
+        expr: |
+          rate(http_requests_total{service="user-api", status=~"5.."}[5m])
+          / rate(http_requests_total{service="user-api"}[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: P1
+          team: platform
+        annotations:
+          summary: "user-api error rate > 5%"
+          runbook: "https://wiki.company.com/runbooks/user-api-errors"
+          dashboard: "https://grafana.company.com/d/user-api"
+```
+
+### Alerting Principles
+
+- **Alert on symptoms, not causes.** Alert on "error rate high," not "pod restarted."
+- **Alert on SLO burn rate.** If you are burning through your error budget
+  faster than expected, page.
+- **Every alert must have a runbook.** No runbook = not a valid alert.
+- **Every alert must be actionable.** If the response is "wait and see,"
+  it should be a dashboard, not an alert.
+- **Deduplicate.** One page per incident, not one per pod.
+- **Test alerts.** Fire test alerts monthly to verify routing.
+
+---
+
+## On-Call Runbook Requirements
+
+Every runbook must contain:
+
+```markdown
+# Runbook: <Alert Name>
+
+## Alert Description
+What this alert means and why it fires.
+
+## Impact
+What is the customer-facing impact?
+
+## Quick Mitigation
+Step-by-step actions to restore service (within 5 minutes):
+1. ...
+2. ...
+3. ...
+
+## Diagnosis
+How to determine root cause:
+- Dashboard link
+- Log query
+- Trace search
+
+## Resolution
+Longer-term fix steps.
+
+## Escalation
+Who to contact if mitigation fails.
+
+## History
+| Date | Cause | Resolution | Duration |
+|------|-------|------------|----------|
+```
+
+### Runbook Rules
+
+- Stored in Git alongside alert definitions.
+- Reviewed and updated after every incident.
+- Must be executable by anyone on the on-call rotation.
+- Include exact commands, not vague instructions.
+- Link to relevant dashboards and log queries.
+
+---
+
+## Structured Logging Standards
+
+### Log Format (JSON)
+
+```json
+{
+  "timestamp": "2025-01-15T10:30:00.123Z",
+  "level": "error",
+  "service": "user-api",
+  "version": "1.2.3",
+  "trace_id": "abc123def456",
+  "span_id": "789ghi",
+  "message": "Failed to fetch user profile",
+  "error": "connection timeout",
+  "user_id": "usr_REDACTED",
+  "duration_ms": 5000,
+  "method": "GET",
+  "path": "/api/v1/users/123",
+  "status_code": 504
+}
+```
+
+### Log Levels
+
+| Level | When to Use | Example |
+|---|---|---|
+| `error` | Operation failed, needs attention | Database query failed, external API error |
+| `warn` | Recoverable issue, may need attention | Retry succeeded, cache miss, slow query |
+| `info` | Significant business events | Request served, user created, job completed |
+| `debug` | Diagnostic detail (disabled in prod) | Query parameters, intermediate state |
+
+### Rules
+
+- JSON format only — no printf-style logs.
+- Include `trace_id` in every log line for correlation.
+- Never log: passwords, tokens, PII, credit card numbers, full request bodies.
+- Redact or hash user identifiers in logs.
+- Log at request boundaries: start, end, error.
+- Use log sampling for high-volume debug logs.
+- Set retention: 7 days hot, 30 days warm, 90 days cold (adjust per compliance).
+
+---
+
+## SLO Framework
+
+### Defining SLOs
+
+| Service | SLI | SLO | Error Budget (30d) |
+|---|---|---|---|
+| User API | Successful requests / total requests | 99.9% | 43.2 min downtime |
+| Payment API | Successful requests / total requests | 99.99% | 4.3 min downtime |
+| Background Jobs | Jobs completed / jobs submitted | 99.5% | 3.6 hours delay |
+| Dashboard | Page load < 3s | 95% | 36 hours of slow loads |
+
+### Error Budget Policy
+
+- **Budget remaining > 50%**: Ship freely, experiment.
+- **Budget remaining 20-50%**: Caution, increase review rigor.
+- **Budget remaining < 20%**: Freeze features, focus on reliability.
+- **Budget exhausted**: All engineering effort on reliability until budget recovers.
+
+---
+
+## Metrics Naming Convention
+
+```
+<namespace>_<subsystem>_<name>_<unit>
+```
+
+Examples:
+- `http_server_request_duration_seconds`
+- `http_server_requests_total`
+- `db_pool_connections_active`
+- `queue_messages_pending`
+
+### Rules
+
+- Use `_total` suffix for counters.
+- Use `_seconds`, `_bytes`, `_ratio` for units.
+- Use snake_case.
+- Prefix with service/subsystem namespace.
+- Keep cardinality low — avoid high-cardinality labels (user_id, request_id).

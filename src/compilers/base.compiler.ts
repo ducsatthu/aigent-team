@@ -1,4 +1,4 @@
-import { assembleReference } from '../core/template-engine.js';
+import { assembleReference, assembleSkill } from '../core/template-engine.js';
 import type { AgentDefinition, AigentTeamConfig, CompiledOutput, Platform, ValidationResult } from '../core/types.js';
 
 export abstract class BaseCompiler {
@@ -25,6 +25,24 @@ export abstract class BaseCompiler {
     return agent.references.map((ref) => ({
       filePath: `${baseDir}/${ref.id}${extension}`,
       content: assembleReference(ref) + '\n',
+      overwriteStrategy: 'replace' as const,
+    }));
+  }
+
+  /**
+   * Compile skill files for an agent into a given directory.
+   * Returns CompiledOutput[] for each skill file.
+   */
+  protected compileSkills(
+    agent: AgentDefinition,
+    baseDir: string,
+    extension: string = '.md',
+  ): CompiledOutput[] {
+    if (!agent.skills?.length) return [];
+
+    return agent.skills.map((skill) => ({
+      filePath: `${baseDir}/${skill.id}${extension}`,
+      content: assembleSkill(skill) + '\n',
       overwriteStrategy: 'replace' as const,
     }));
   }

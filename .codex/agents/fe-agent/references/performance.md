@@ -1,0 +1,104 @@
+# Frontend Performance
+
+## Core Web Vitals Targets
+
+| Metric | Good | Needs Improvement | Poor |
+|--------|------|-------------------|------|
+| LCP (Largest Contentful Paint) | < 2.5s | 2.5s - 4s | > 4s |
+| INP (Interaction to Next Paint) | < 200ms | 200ms - 500ms | > 500ms |
+| CLS (Cumulative Layout Shift) | < 0.1 | 0.1 - 0.25 | > 0.25 |
+
+## Performance Audit Procedure
+
+1. **Measure baseline**: Lighthouse CI or `web-vitals` library. Record LCP, INP, CLS.
+2. **Bundle analysis**: `npx next build --analyze` or `npx source-map-explorer`. Flag deps > 50KB.
+3. **Render profiling**: React DevTools Profiler. Components re-rendering >2x per action = problem.
+4. **Network waterfall**: DevTools Network tab. Sequential requests → parallelize. Unnecessary client fetches → move server-side.
+5. **Memory check**: DevTools Memory tab during navigation. Growing RSS = leak. Look for detached DOM, uncleaned listeners.
+6. **Fix → Re-measure → Compare** against baseline.
+
+## Code Splitting
+
+- **Route-based** (minimum): Every route = separate chunk via `React.lazy()` + Suspense
+- **Component-level**: Heavy widgets (charts, editors, maps) via `dynamic(() => import(...), { ssr: false })`
+- **Conditional**: Features behind feature flags loaded only when enabled
+
+```typescript
+// Route-level splitting
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+
+// Component-level for heavy widgets
+const Chart = dynamic(() => import('./components/Chart'), {
+  ssr: false,
+  loading: () => <ChartSkeleton />,
+});
+```
+
+## Rendering Optimization
+
+**When to use `useMemo` / `useCallback`:**
+- Only when React DevTools Profiler shows a measurable problem (>16ms render)
+- For expensive computations (sorting/filtering large arrays)
+- For referential equality in dependency arrays of child components using `React.memo`
+- **Never** prophylactically "just in case"
+
+**Virtualization** — mandatory for lists > 50 items:
+```typescript
+import { useVirtualizer } from '@tanstack/react-virtual';
+// Renders only visible items + buffer. 10,000 items = ~20 DOM nodes.
+```
+
+**Avoid layout thrashing:**
+```typescript
+// BAD: Read-write-read-write cycle forces reflow each time
+items.forEach(item => {
+  const height = item.offsetHeight; // Read → forces reflow
+  item.style.height = height + 10 + 'px'; // Write
+});
+
+// GOOD: Batch reads, then batch writes
+const heights = items.map(item => item.offsetHeight);
+items.forEach((item, i) => {
+  item.style.height = heights[i] + 10 + 'px';
+});
+```
+
+## Images
+
+- Always use framework `<Image>` component (Next.js, Nuxt, etc.)
+- Set explicit `width` and `height` to prevent CLS
+- Use `priority` only for above-the-fold hero images
+- Lazy load all below-fold images (default behavior)
+- Format: WebP/AVIF with JPEG fallback
+- Responsive: use `sizes` attribute for art direction
+
+## Fonts
+
+- Use `next/font` or `@fontsource` for self-hosting
+- Preload only the weights/subsets you use (Latin: ~15KB vs All: ~100KB+)
+- `font-display: swap` always — show fallback font immediately
+- Limit to 2 font families max
+
+## Bundle Hygiene
+
+- No dependency > 20KB gzipped without team discussion
+- Check for duplicates: `npm ls <package>` — multiple versions = bundle bloat
+- Import specific modules: `import { debounce } from 'lodash-es/debounce'` not `import _ from 'lodash'`
+- Barrel files (`index.ts` re-exporting everything) kill tree-shaking — avoid in hot paths
+
+## Streaming & Suspense
+
+```tsx
+// Progressive loading with Suspense boundaries
+<Suspense fallback={<HeaderSkeleton />}>
+  <Header />
+</Suspense>
+<Suspense fallback={<ContentSkeleton />}>
+  <MainContent /> {/* Streams as data arrives */}
+</Suspense>
+<Suspense fallback={<SidebarSkeleton />}>
+  <Sidebar /> {/* Independent loading */}
+</Suspense>
+```
+
+Each Suspense boundary loads independently — user sees progressive content, not a blank page.

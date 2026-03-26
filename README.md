@@ -49,9 +49,10 @@ Each agent is a senior-level specialist (8+ years expertise) with deep knowledge
        └─────┘  └─────┘ └─────┘ └──────┘  └───────┘
 ```
 
-Each agent has:
-- **Skill index** (~80-150 lines) — always loaded in context. Core principles, anti-patterns, decision frameworks.
-- **Reference files** (3-9 per agent) — loaded on-demand when the task requires deep knowledge.
+Each agent has three layers of knowledge:
+- **Rules** (~30-50 lines) — always loaded, top of context. Hard constraints: scope limits, prohibited actions, escalation triggers, output requirements.
+- **Skill index** (~80-150 lines) — always loaded. Core principles, anti-patterns, decision frameworks, reference + skill catalogs.
+- **Reference files** (3-9 per agent) + **Skill files** (2+ per agent) — loaded on-demand when the task requires deep knowledge or executable procedures.
 
 This keeps the always-loaded context slim while providing access to thousands of lines of senior expertise when needed.
 
@@ -165,38 +166,32 @@ After running `aigent-team generate`, you'll see:
 
 ```
 # Claude Code
-.claude/agents/lead-agent.md              # Skill index (always loaded)
-.claude/agents/lead-agent/references/     # Deep reference docs
-.claude/agents/fe-agent.md
-.claude/agents/fe-agent/references/
+.claude/agents/fe-agent.md               # Rules + skill index (always loaded)
+.claude/agents/fe-agent/references/       # Deep reference docs
   ├── component-architecture.md
   ├── state-management.md
-  ├── performance.md
-  ├── accessibility.md
-  ├── security.md
-  ├── testing.md
-  ├── css-styling.md
-  ├── forms.md
-  └── review-checklist.md
-...
+  └── ...
+.claude/agents/fe-agent/skills/           # Executable procedures
+  ├── analyze-bundle.md
+  └── component-audit.md
 CLAUDE.md                                 # Agent team overview
 
 # Cursor
-.cursor/rules/fe-agent.mdc               # Glob-scoped skill
+.cursor/rules/fe-agent.mdc               # Glob-scoped skill (includes rules)
 .cursor/rules/fe-refs/                    # Glob-scoped references
-...
+.cursor/rules/fe-skills/                  # Glob-scoped skills
 
 # Codex
 AGENTS.md                                 # Combined agent doc
 .codex/agents/fe-agent.md                 # Individual agent
 .codex/agents/fe-agent/references/        # References
-...
+.codex/agents/fe-agent/skills/            # Skills
 
 # Antigravity
 GEMINI.md                                 # Agent overview
 .agents/skills/fe-agent/SKILL.md          # Skill file
 .agents/skills/fe-agent/references/       # References
-...
+.agents/skills/fe-agent/skills/           # Skills
 ```
 
 ## How agents are loaded by each platform
@@ -316,6 +311,16 @@ The Lead agent acts as orchestrator. When it receives a task, it:
 4. **Reviews** output quality before delivery
 
 This mirrors how a real tech lead operates — delegating to specialists and ensuring alignment.
+
+## Documentation
+
+| Document | Description |
+|---|---|
+| [Architecture](docs/architecture.md) | System design, data flow, module map, compiler pattern |
+| [Agent Reference](docs/agents.md) | All 6 agents — roles, capabilities, reference file catalog |
+| [Vision & Roadmap](docs/vision.md) | Future plans, design principles, platform expansion |
+| [Contributing](CONTRIBUTING.md) | Development setup, how to add agents/compilers |
+| [Changelog](CHANGELOG.md) | Release history |
 
 ## Contributing
 

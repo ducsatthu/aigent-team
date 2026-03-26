@@ -1,0 +1,149 @@
+---
+description: "QA Agent reference: review checklist"
+alwaysApply: false
+globs: "**/*.test.*, **/*.spec.*, **/*.e2e.*, test/**/*, tests/**/*, e2e/**/*, cypress/**/*, playwright/**/*, playwright.config.*, __tests__/**/*, **/fixtures/**/*, **/factories/**/*, vitest.config.*, jest.config.*, cypress.config.*"
+---
+
+# Test Code Review Checklist
+
+Use this checklist when reviewing any PR that adds or modifies test code.
+Not every section applies to every PR — skip sections that are not relevant.
+
+---
+
+## 1. Test Level Selection
+
+- [ ] Test is at the lowest level that can catch the bug
+- [ ] Unit tests do not involve I/O (network, file system, database)
+- [ ] Integration tests are justified — they test module collaboration, not
+      logic that a unit test could cover
+- [ ] E2E tests protect critical user journeys only — not redundant with
+      integration tests
+- [ ] Contract tests exist for cross-service API calls
+- [ ] Comment explains why E2E was chosen over integration (if applicable)
+
+---
+
+## 2. Test Quality
+
+- [ ] Test name describes behaviour, not implementation
+      (`"calculates tax for multi-state order"`, not `"test calculateTax"`)
+- [ ] Each test has a single clear assertion focus (one reason to fail)
+- [ ] Tests are independent — no shared mutable state between tests
+- [ ] No test ordering dependency (would pass with randomised order)
+- [ ] Arrange-Act-Assert structure is clear
+- [ ] No logic in tests (no `if`, no loops, no try/catch) — use
+      `test.each` for parameterised cases
+- [ ] No `console.log` or debugging artefacts left in
+- [ ] Test fails for the right reason when the feature is broken
+      (verify by mentally removing the feature code)
+
+---
+
+## 3. Test Data
+
+- [ ] Uses factories for object creation (not inline literals)
+- [ ] Only overrides fields relevant to the test (sensible defaults for rest)
+- [ ] No hardcoded IDs that could collide across tests
+- [ ] Faker seed is set if deterministic reproduction is needed
+- [ ] Database state is isolated (transaction rollback, truncate, or unique IDs)
+- [ ] No test data leaked between tests (check `beforeEach` / `afterEach`)
+
+---
+
+## 4. Mocking
+
+- [ ] Mocks are at system boundaries only (HTTP, clock, random)
+- [ ] No internal modules are mocked — use real implementations
+- [ ] MSW handlers use `onUnhandledRequest: 'error'`
+- [ ] Per-test overrides use `server.use()` and are reset in `afterEach`
+- [ ] Mock responses are realistic (match actual API shape)
+- [ ] Mock contracts are verified against real API (schema validation or
+      contract test exists)
+- [ ] `vi.restoreAllMocks()` runs in global `afterEach`
+
+---
+
+## 5. E2E Tests
+
+- [ ] Uses Page Object Model (no raw selectors in test files)
+- [ ] Element selection follows priority: `getByRole` > `getByLabel` >
+      `getByTestId`
+- [ ] No `waitForTimeout` / `sleep` — uses explicit waits
+- [ ] Test data seeded via API, not through UI interactions
+- [ ] Test is parallelisation-safe (no shared global state)
+- [ ] Viewport is fixed in config (no layout-dependent flakiness)
+- [ ] Animations disabled in test config
+- [ ] Screenshots and traces captured on failure
+- [ ] Test passes with `--repeat-each=5` locally
+
+---
+
+## 6. Assertions
+
+- [ ] Assertions are specific (not just `toBeTruthy` or `toMatchSnapshot`)
+- [ ] Error cases are tested, not just happy path
+- [ ] Boundary values are tested where applicable
+- [ ] Negative assertions are used correctly (`not.toContain` vs missing check)
+- [ ] Async assertions use proper `await` / `resolves` / `rejects`
+- [ ] No snapshot tests for logic (snapshots only for serialised output
+      like HTML or JSON schema)
+
+---
+
+## 7. Flakiness Risk
+
+- [ ] No time-dependent logic without clock mocking
+- [ ] No reliance on execution speed (no "this runs fast enough")
+- [ ] No reliance on random values without seeding
+- [ ] No reliance on network availability (all external calls mocked)
+- [ ] No reliance on file system state (uses temp dirs or mocks)
+- [ ] Database queries do not assume row ordering without `ORDER BY`
+
+---
+
+## 8. Performance
+
+- [ ] Unit tests do not perform I/O (should complete in < 50 ms each)
+- [ ] Integration test setup is batched (not N+1 inserts)
+- [ ] E2E tests do not duplicate coverage available at lower levels
+- [ ] No excessive `beforeEach` setup that could be `beforeAll`
+      (only when safe — consider isolation)
+- [ ] Test suite stays within time budget (unit < 10 s, integration < 2 min,
+      E2E smoke < 10 min)
+
+---
+
+## 9. CI Integration
+
+- [ ] Test runs in CI (not just locally)
+- [ ] Test is in the correct pipeline stage (unit/integration/E2E)
+- [ ] Test outputs JUnit XML or other parseable format
+- [ ] Failure produces useful output (assertion messages, screenshots, traces)
+- [ ] No CI-specific environment assumptions without fallback
+      (`process.env.CI` checks are guarded)
+
+---
+
+## 10. Coverage
+
+- [ ] New code has tests (not just modified code)
+- [ ] Tests cover happy path, error path, and edge cases
+- [ ] If coverage decreased, there is a justification
+- [ ] No tests written solely to increase coverage percentage
+      (every test must catch a real bug class)
+
+---
+
+## Quick Reject Criteria
+
+Flag the PR immediately if any of these are present:
+
+- `sleep()` or `waitForTimeout()` in E2E tests
+- Mocking internal modules
+- Shared mutable state between tests
+- `test.skip` or `test.todo` without a linked issue
+- Snapshot tests for business logic
+- Hardcoded test data that will collide in parallel runs
+- No assertions in a test (or only `toMatchSnapshot`)
+- `console.log` left in test code

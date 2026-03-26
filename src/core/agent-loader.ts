@@ -3,7 +3,7 @@ import { resolve, dirname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 import { deepmerge } from 'deepmerge-ts';
-import type { AgentDefinition, AigentTeamConfig, ReferenceFile, TeamRole } from './types.js';
+import type { AgentDefinition, AigentTeamConfig, ReferenceFile, SkillFile, TeamRole } from './types.js';
 
 // Resolve package root: works both in src/ (dev) and dist/ (built)
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -53,6 +53,26 @@ function loadReferences(refsDir: string): ReferenceFile[] {
   return refs;
 }
 
+function loadSkills(skillsDir: string): SkillFile[] {
+  if (!existsSync(skillsDir)) return [];
+  const skills: SkillFile[] = [];
+
+  const files = readdirSync(skillsDir).filter((f) => f.endsWith('.md'));
+  for (const file of files) {
+    const content = readFileSync(resolve(skillsDir, file), 'utf-8').trim();
+    const id = file.replace('.md', '');
+    skills.push({
+      id,
+      name: id.replace(/-/g, ' '),
+      description: '',
+      trigger: '',
+      content,
+    });
+  }
+
+  return skills;
+}
+
 function loadBuiltinAgent(role: TeamRole): AgentDefinition {
   const teamDir = resolve(TEMPLATES_DIR, 'teams', role);
   const agentYaml = readFileSync(resolve(teamDir, 'agent.yaml'), 'utf-8');
@@ -68,6 +88,10 @@ function loadBuiltinAgent(role: TeamRole): AgentDefinition {
   // New: load reference files
   const references = loadReferences(resolve(teamDir, 'references'));
 
+  // Load rules and skills
+  const rulesContent = readIfExists(resolve(teamDir, 'rules.md'));
+  const skills = loadSkills(resolve(teamDir, 'skills'));
+
   return {
     id: agentDef.id,
     name: agentDef.name,
@@ -82,6 +106,8 @@ function loadBuiltinAgent(role: TeamRole): AgentDefinition {
     workflows: agentDef.workflows || [],
     sharedKnowledge: agentDef.sharedKnowledge || [],
     references,
+    rulesContent,
+    skills,
     globs: agentDef.globs || [],
   };
 }
@@ -117,9 +143,15 @@ export function loadAgents(
         conventions = readFileSync(resolve(cwd, override.conventions), 'utf-8').trim();
       }
 
+      let rulesContent = agent.rulesContent;
+      if (override.rules && existsSync(resolve(cwd, override.rules))) {
+        rulesContent = readFileSync(resolve(cwd, override.rules), 'utf-8').trim();
+      }
+
       agent = deepmerge(agent, {
         ...override,
         conventions,
+        rulesContent,
       }) as AgentDefinition;
     }
 
@@ -133,10 +165,19 @@ export function loadAgents(
       if (localChecklist) agent.reviewChecklist = localChecklist;
       if (localSkill) agent.skillContent = localSkill;
 
+      const localRules = readIfExists(resolve(localDir, 'rules.md'));
+      if (localRules) agent.rulesContent = localRules;
+
       // Merge local references
       const localRefs = loadReferences(resolve(localDir, 'references'));
       if (localRefs.length) {
         agent.references = [...agent.references, ...localRefs];
+      }
+
+      // Merge local skills
+      const localSkills = loadSkills(resolve(localDir, 'skills'));
+      if (localSkills.length) {
+        agent.skills = [...agent.skills, ...localSkills];
       }
     }
 

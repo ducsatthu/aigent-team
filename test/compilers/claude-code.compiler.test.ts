@@ -25,6 +25,9 @@ const mockAgent: AgentDefinition = {
     },
   ],
   sharedKnowledge: ['Shared knowledge content'],
+  references: [],
+  rulesContent: '',
+  skills: [],
   globs: ['**/*.tsx'],
 };
 
@@ -109,5 +112,44 @@ describe('ClaudeCodeCompiler', () => {
 
     expect(result.warnings.length).toBeGreaterThan(0);
     expect(result.warnings[0]).toContain('recommended max 300');
+  });
+
+  it('should include rules content in agent file', () => {
+    const agentWithRules = {
+      ...mockAgent,
+      rulesContent: '# Rules\n\nDO NOT modify backend files.',
+    };
+    const outputs = compiler.compile([agentWithRules], mockConfig);
+    const agentFile = outputs.find((o) => o.filePath === '.claude/agents/fe-agent.md')!;
+
+    expect(agentFile.content).toContain('DO NOT modify backend files');
+  });
+
+  it('should generate skill files', () => {
+    const agentWithSkills = {
+      ...mockAgent,
+      skills: [
+        { id: 'analyze-bundle', name: 'analyze bundle', description: '', trigger: '', content: '# Analyze Bundle\n\nSteps here.' },
+      ],
+    };
+    const outputs = compiler.compile([agentWithSkills], mockConfig);
+    const skillFile = outputs.find((o) => o.filePath === '.claude/agents/fe-agent/skills/analyze-bundle.md');
+
+    expect(skillFile).toBeDefined();
+    expect(skillFile!.content).toContain('# Analyze Bundle');
+  });
+
+  it('should not warn on skill files exceeding 300 lines', () => {
+    const agentWithLongSkill = {
+      ...mockAgent,
+      skills: [
+        { id: 'long-skill', name: 'long skill', description: '', trigger: '', content: Array(400).fill('Step line').join('\n') },
+      ],
+    };
+    const outputs = compiler.compile([agentWithLongSkill], mockConfig);
+    const result = compiler.validate(outputs);
+
+    const skillWarnings = result.warnings.filter((w) => w.includes('long-skill'));
+    expect(skillWarnings).toHaveLength(0);
   });
 });

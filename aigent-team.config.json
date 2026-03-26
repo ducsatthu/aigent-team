@@ -1,0 +1,16 @@
+{
+  "projectName": "aigent-team",
+  "platforms": [
+    "claude-code",
+    "cursor",
+    "codex"
+  ],
+  "teams": [
+    "lead",
+    "ba",
+    "fe",
+    "be",
+    "qa",
+    "devops"
+  ]
+}

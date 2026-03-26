@@ -30,6 +30,13 @@ export class ClaudeCodeCompiler extends BaseCompiler {
         `.claude/agents/${agent.id}-agent/references`,
       );
       outputs.push(...refs);
+
+      // Generate skill files
+      const skills = this.compileSkills(
+        agent,
+        `.claude/agents/${agent.id}-agent/skills`,
+      );
+      outputs.push(...skills);
     }
 
     // Generate CLAUDE.md section about available agents
@@ -66,8 +73,8 @@ export class ClaudeCodeCompiler extends BaseCompiler {
     const warnings: string[] = [];
 
     for (const output of outputs) {
-      // Only warn about size on skill index files, not reference files
-      if (output.filePath.includes('/references/')) continue;
+      // Only warn about size on skill index files, not reference/skill files
+      if (output.filePath.includes('/references/') || output.filePath.includes('/skills/')) continue;
 
       const lineCount = output.content.split('\n').length;
       if (lineCount > 300) {
