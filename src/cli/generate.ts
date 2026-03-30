@@ -4,10 +4,13 @@ import chalk from 'chalk';
 import { loadConfig } from '../core/config-loader.js';
 import { loadAgents } from '../core/agent-loader.js';
 import { getAllCompilers } from '../compilers/index.js';
-import type { CompiledOutput, Platform } from '../core/types.js';
+import { PluginCompiler } from '../compilers/plugin.compiler.js';
+import type { CompiledOutput, GenerateScope, Platform, TeamRole } from '../core/types.js';
 
-interface GenerateOptions {
+export interface GenerateOptions {
   platform?: Platform;
+  scopes?: GenerateScope[];
+  teams?: TeamRole[];
 }
 
 function writeOutput(output: CompiledOutput, cwd: string): boolean {
@@ -33,18 +36,48 @@ function writeOutput(output: CompiledOutput, cwd: string): boolean {
   return true;
 }
 
+function writeOutputs(outputs: CompiledOutput[], cwd: string, label: string): number {
+  let written = 0;
+  for (const output of outputs) {
+    if (writeOutput(output, cwd)) {
+      written++;
+      console.log(chalk.dim(`  ${output.filePath}`));
+    }
+  }
+  console.log(chalk.green(`✓ ${label}: ${written} file(s) generated`));
+  return written;
+}
+
 export async function runGenerate(cwd: string = process.cwd(), options: GenerateOptions = {}) {
   const config = await loadConfig(cwd);
-  const agents = loadAgents(config, cwd);
 
-  const platforms = options.platform ? [options.platform] : config.platforms;
+  // --team override
+  const effectiveConfig = options.teams
+    ? { ...config, teams: options.teams }
+    : config;
+
+  const agents = loadAgents(effectiveConfig, cwd);
+  const scopes = options.scopes ?? ['all'];
+
+  // Plugin mode — platform-agnostic
+  if (scopes.includes('plugin')) {
+    const pluginDir = effectiveConfig.output?.pluginDir ?? '.aigent-team-plugin';
+    const pluginCompiler = new PluginCompiler();
+    const outputs = pluginCompiler.compilePlugin(agents, effectiveConfig, pluginDir);
+    const written = writeOutputs(outputs, cwd, 'plugin');
+    console.log(chalk.bold(`\nTotal: ${written} file(s) generated`));
+    return;
+  }
+
+  // Normal mode — per platform with scope filtering
+  const platforms = options.platform ? [options.platform] : effectiveConfig.platforms;
   const compilers = getAllCompilers(platforms);
 
   let totalFiles = 0;
   let totalWarnings = 0;
 
   for (const compiler of compilers) {
-    const outputs = compiler.compile(agents, config);
+    const outputs = compiler.compileWithScope(agents, effectiveConfig, scopes);
     const validation = compiler.validate(outputs);
 
     if (!validation.valid) {
@@ -60,16 +93,7 @@ export async function runGenerate(cwd: string = process.cwd(), options: Generate
       totalWarnings++;
     }
 
-    let written = 0;
-    for (const output of outputs) {
-      if (writeOutput(output, cwd)) {
-        written++;
-        console.log(chalk.dim(`  ${output.filePath}`));
-      }
-    }
-
-    console.log(chalk.green(`✓ ${compiler.platform}: ${written} file(s) generated`));
-    totalFiles += written;
+    totalFiles += writeOutputs(outputs, cwd, compiler.platform);
   }
 
   console.log(chalk.bold(`\nTotal: ${totalFiles} file(s) generated`));

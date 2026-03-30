@@ -24,3 +24,26 @@ coverage/
 
 # npm
 *.tgz
+
+# ---- aigent-team generated output ----
+# Plugin bundle (generate --scope plugin)
+.aigent-team-plugin/
+
+# Install records
+.aigent-team/
+
+# Claude Code generated files
+CLAUDE.md
+.claude/agents/
+
+# Cursor generated files
+.cursor/rules/
+.cursor/skills/
+
+# Codex generated files
+AGENTS.md
+.codex/
+
+# Antigravity generated files
+GEMINI.md
+.agents/

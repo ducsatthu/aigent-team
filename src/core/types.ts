@@ -8,6 +8,19 @@ export type Platform = (typeof PLATFORMS)[number];
 export const TEAM_ROLES = ['lead', 'ba', 'fe', 'be', 'qa', 'devops'] as const;
 export type TeamRole = (typeof TEAM_ROLES)[number];
 
+export const GENERATE_SCOPES = ['all', 'agents', 'skills', 'references', 'plugin'] as const;
+export type GenerateScope = (typeof GENERATE_SCOPES)[number];
+
+export const PLUGIN_ARTIFACT_CATEGORIES = ['rules', 'skills', 'agents', 'kb', 'ai'] as const;
+export type PluginArtifactCategory = (typeof PLUGIN_ARTIFACT_CATEGORIES)[number];
+
+export const PLUGIN_BUNDLE_DIRS: Record<Platform, string> = {
+  'claude-code': 'claude-code-plugin',
+  cursor: 'cursor-ide-plugin',
+  codex: 'codex-plugin',
+  antigravity: 'antigravity-plugin',
+};
+
 // ---- Reference File ----
 
 export interface ReferenceFile {
@@ -103,6 +116,7 @@ export const ConfigSchema = z.object({
   }).optional(),
   output: z.object({
     directory: z.string().optional(),
+    pluginDir: z.string().optional(),
   }).optional(),
 });
 
@@ -120,4 +134,50 @@ export interface ValidationResult {
   valid: boolean;
   errors: string[];
   warnings: string[];
+}
+
+// ---- Plugin Manifest ----
+
+export interface PluginAgentMeta {
+  id: string;
+  name: string;
+  description: string;
+  role: TeamRole;
+  tools: ToolPermissions;
+  globs?: string[];
+}
+
+export interface PluginPlatformBundle {
+  platform: Platform;
+  directory: string;
+  artifacts: Partial<Record<PluginArtifactCategory, number>>;
+}
+
+export interface PluginManifest {
+  name: string;
+  version: string;
+  generatedAt: string;
+  generator: string;
+  projectName: string;
+  roles: TeamRole[];
+  platforms: Platform[];
+  agents: PluginAgentMeta[];
+  files: {
+    agents: number;
+    skills: number;
+    references: number;
+  };
+  bundles?: PluginPlatformBundle[];
+}
+
+// ---- Install Record ----
+
+export interface InstallRecord {
+  name: string;
+  version: string;
+  installedAt: string;
+  pluginPath: string;
+  files: string[];
+  /** Absolute path when `install --cursor-user-plugin` copied the Cursor IDE bundle */
+  cursorUserPluginPath?: string;
 }

@@ -65,4 +65,83 @@ describe('CodexCompiler', () => {
     expect(result.valid).toBe(false);
     expect(result.errors[0]).toContain('AGENTS.md is missing');
   });
+
+  describe('compilePluginBundle', () => {
+    const agentWithExtras: AgentDefinition = {
+      ...mockAgent,
+      references: [
+        { id: 'test-strategy', title: 'Test Strategy', description: '', whenToRead: '', content: '# Test Strategy' },
+      ],
+      skills: [
+        { id: 'generate-test-data', name: 'generate test data', description: '', trigger: '', content: '# Generate Test Data' },
+      ],
+    };
+
+    it('should generate rules/AGENTS.md', () => {
+      const outputs = compiler.compilePluginBundle([agentWithExtras], mockConfig, 'out');
+      const rules = outputs.find((o) => o.filePath === 'out/rules/AGENTS.md');
+      expect(rules).toBeDefined();
+      expect(rules!.content).toContain('# Project Agents');
+      expect(rules!.content).toContain('QA Agent');
+    });
+
+    it('should generate agents with frontmatter', () => {
+      const outputs = compiler.compilePluginBundle([agentWithExtras], mockConfig, 'out');
+      const agent = outputs.find((o) => o.filePath === 'out/agents/qa-agent.md');
+      expect(agent).toBeDefined();
+      expect(agent!.content).toContain('nickname_candidates:');
+    });
+
+    it('should generate skills organized by agent', () => {
+      const outputs = compiler.compilePluginBundle([agentWithExtras], mockConfig, 'out');
+      const skill = outputs.find((o) => o.filePath === 'out/skills/qa/generate-test-data.md');
+      expect(skill).toBeDefined();
+      expect(skill!.content).toContain('# Generate Test Data');
+    });
+
+    it('should generate KB organized by agent', () => {
+      const outputs = compiler.compilePluginBundle([agentWithExtras], mockConfig, 'out');
+      const kb = outputs.find((o) => o.filePath === 'out/kb/qa/test-strategy.md');
+      expect(kb).toBeDefined();
+      expect(kb!.content).toContain('# Test Strategy');
+    });
+  });
+
+  describe('compileWithScope', () => {
+    const agentWithExtras: AgentDefinition = {
+      ...mockAgent,
+      references: [
+        { id: 'test-strategy', title: 'Test Strategy', description: '', whenToRead: '', content: '# Test Strategy' },
+      ],
+      skills: [
+        { id: 'generate-test-data', name: 'generate test data', description: '', trigger: '', content: '# Generate Test Data' },
+      ],
+    };
+
+    it('should produce identical output with scope all vs compile', () => {
+      const fromCompile = compiler.compile([agentWithExtras], mockConfig);
+      const fromScope = compiler.compileWithScope([agentWithExtras], mockConfig, ['all']);
+      expect(fromScope).toEqual(fromCompile);
+    });
+
+    it('should produce only agent index + hub with scope agents', () => {
+      const outputs = compiler.compileWithScope([agentWithExtras], mockConfig, ['agents']);
+      expect(outputs.some((o) => o.filePath === 'AGENTS.md')).toBe(true);
+      expect(outputs.some((o) => o.filePath === '.codex/agents/qa-agent.md')).toBe(true);
+      expect(outputs.some((o) => o.filePath.includes('/references/'))).toBe(false);
+      expect(outputs.some((o) => o.filePath.includes('/skills/'))).toBe(false);
+    });
+
+    it('should produce only skill files with scope skills', () => {
+      const outputs = compiler.compileWithScope([agentWithExtras], mockConfig, ['skills']);
+      expect(outputs).toHaveLength(1);
+      expect(outputs[0].filePath).toBe('.codex/agents/qa-agent/skills/generate-test-data.md');
+    });
+
+    it('should produce only reference files with scope references', () => {
+      const outputs = compiler.compileWithScope([agentWithExtras], mockConfig, ['references']);
+      expect(outputs).toHaveLength(1);
+      expect(outputs[0].filePath).toBe('.codex/agents/qa-agent/references/test-strategy.md');
+    });
+  });
 });

@@ -152,4 +152,91 @@ describe('ClaudeCodeCompiler', () => {
     const skillWarnings = result.warnings.filter((w) => w.includes('long-skill'));
     expect(skillWarnings).toHaveLength(0);
   });
+
+  describe('compilePluginBundle', () => {
+    const agentWithExtras: AgentDefinition = {
+      ...mockAgent,
+      references: [
+        { id: 'perf-guide', title: 'Performance Guide', description: '', whenToRead: '', content: '# Perf Guide' },
+      ],
+      skills: [
+        { id: 'analyze-bundle', name: 'analyze bundle', description: '', trigger: '', content: '# Analyze Bundle' },
+      ],
+    };
+
+    it('should generate rules/CLAUDE.md', () => {
+      const outputs = compiler.compilePluginBundle([agentWithExtras], mockConfig, 'out');
+      const rules = outputs.find((o) => o.filePath === 'out/rules/CLAUDE.md');
+      expect(rules).toBeDefined();
+      expect(rules!.content).toContain('## Agent Team');
+      expect(rules!.content).toContain('Frontend Agent');
+    });
+
+    it('should generate agents with frontmatter', () => {
+      const outputs = compiler.compilePluginBundle([agentWithExtras], mockConfig, 'out');
+      const agent = outputs.find((o) => o.filePath === 'out/agents/fe-agent.md');
+      expect(agent).toBeDefined();
+      expect(agent!.content).toContain('name: "Frontend Agent"');
+      expect(agent!.content).toContain('tools:');
+    });
+
+    it('should generate skills organized by agent', () => {
+      const outputs = compiler.compilePluginBundle([agentWithExtras], mockConfig, 'out');
+      const skill = outputs.find((o) => o.filePath === 'out/skills/fe/analyze-bundle.md');
+      expect(skill).toBeDefined();
+      expect(skill!.content).toContain('# Analyze Bundle');
+    });
+
+    it('should generate KB organized by agent', () => {
+      const outputs = compiler.compilePluginBundle([agentWithExtras], mockConfig, 'out');
+      const kb = outputs.find((o) => o.filePath === 'out/kb/fe/perf-guide.md');
+      expect(kb).toBeDefined();
+      expect(kb!.content).toContain('# Perf Guide');
+    });
+  });
+
+  describe('compileWithScope', () => {
+    const agentWithExtras: AgentDefinition = {
+      ...mockAgent,
+      references: [
+        { id: 'perf-guide', title: 'Performance Guide', description: '', whenToRead: '', content: '# Perf Guide' },
+      ],
+      skills: [
+        { id: 'analyze-bundle', name: 'analyze bundle', description: '', trigger: '', content: '# Analyze Bundle' },
+      ],
+    };
+
+    it('should produce identical output with scope all vs compile', () => {
+      const fromCompile = compiler.compile([agentWithExtras], mockConfig);
+      const fromScope = compiler.compileWithScope([agentWithExtras], mockConfig, ['all']);
+      expect(fromScope).toEqual(fromCompile);
+    });
+
+    it('should produce only agent index + hub with scope agents', () => {
+      const outputs = compiler.compileWithScope([agentWithExtras], mockConfig, ['agents']);
+      expect(outputs.some((o) => o.filePath === 'CLAUDE.md')).toBe(true);
+      expect(outputs.some((o) => o.filePath === '.claude/agents/fe-agent.md')).toBe(true);
+      expect(outputs.some((o) => o.filePath.includes('/references/'))).toBe(false);
+      expect(outputs.some((o) => o.filePath.includes('/skills/'))).toBe(false);
+    });
+
+    it('should produce only skill files with scope skills', () => {
+      const outputs = compiler.compileWithScope([agentWithExtras], mockConfig, ['skills']);
+      expect(outputs).toHaveLength(1);
+      expect(outputs[0].filePath).toBe('.claude/agents/fe-agent/skills/analyze-bundle.md');
+    });
+
+    it('should produce only reference files with scope references', () => {
+      const outputs = compiler.compileWithScope([agentWithExtras], mockConfig, ['references']);
+      expect(outputs).toHaveLength(1);
+      expect(outputs[0].filePath).toBe('.claude/agents/fe-agent/references/perf-guide.md');
+    });
+
+    it('should combine agents + skills scopes', () => {
+      const outputs = compiler.compileWithScope([agentWithExtras], mockConfig, ['agents', 'skills']);
+      expect(outputs.some((o) => o.filePath === '.claude/agents/fe-agent.md')).toBe(true);
+      expect(outputs.some((o) => o.filePath.includes('/skills/'))).toBe(true);
+      expect(outputs.some((o) => o.filePath.includes('/references/'))).toBe(false);
+    });
+  });
 });

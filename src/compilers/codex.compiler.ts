@@ -1,14 +1,15 @@
 import { BaseCompiler } from './base.compiler.js';
-import { assembleSkillIndex } from '../core/template-engine.js';
+import { assembleReference, assembleSkill, assembleSkillIndex } from '../core/template-engine.js';
 import type { AgentDefinition, AigentTeamConfig, CompiledOutput, Platform, ValidationResult } from '../core/types.js';
 
 export class CodexCompiler extends BaseCompiler {
   readonly platform: Platform = 'codex';
 
   compile(agents: AgentDefinition[], config: AigentTeamConfig): CompiledOutput[] {
-    const outputs: CompiledOutput[] = [];
+    return this.compileWithScope(agents, config, ['all']);
+  }
 
-    // Generate AGENTS.md with slim skill sections
+  protected compileHubFile(agents: AgentDefinition[], _config: AigentTeamConfig): CompiledOutput[] {
     const sections = agents.map((agent) => {
       const body = assembleSkillIndex(agent);
       return `## ${agent.name} (${agent.id})\n\n${body}`;
@@ -29,13 +30,16 @@ export class CodexCompiler extends BaseCompiler {
       sharedKnowledge ? `## Shared Knowledge\n\n${sharedKnowledge}` : '',
     ].filter(Boolean).join('\n\n');
 
-    outputs.push({
+    return [{
       filePath: 'AGENTS.md',
       content: agentsMd + '\n',
       overwriteStrategy: 'replace',
-    });
+    }];
+  }
 
-    // Generate .codex/agents/<team>.md subagent files + references
+  protected compileAgentIndexes(agents: AgentDefinition[], _config: AigentTeamConfig): CompiledOutput[] {
+    const outputs: CompiledOutput[] = [];
+
     for (const agent of agents) {
       const frontmatter = this.formatFrontmatter({
         nickname_candidates: [agent.id, agent.role],
@@ -50,20 +54,100 @@ export class CodexCompiler extends BaseCompiler {
         content,
         overwriteStrategy: 'replace',
       });
+    }
 
-      // Generate reference files
-      const refs = this.compileReferences(
-        agent,
-        `.codex/agents/${agent.id}-agent/references`,
-      );
-      outputs.push(...refs);
+    return outputs;
+  }
 
-      // Generate skill files
-      const skills = this.compileSkills(
+  protected compileAllSkills(agents: AgentDefinition[]): CompiledOutput[] {
+    const outputs: CompiledOutput[] = [];
+    for (const agent of agents) {
+      outputs.push(...this.compileSkills(
         agent,
         `.codex/agents/${agent.id}-agent/skills`,
-      );
-      outputs.push(...skills);
+      ));
+    }
+    return outputs;
+  }
+
+  protected compileAllReferences(agents: AgentDefinition[]): CompiledOutput[] {
+    const outputs: CompiledOutput[] = [];
+    for (const agent of agents) {
+      outputs.push(...this.compileReferences(
+        agent,
+        `.codex/agents/${agent.id}-agent/references`,
+      ));
+    }
+    return outputs;
+  }
+
+  compilePluginBundle(
+    agents: AgentDefinition[],
+    _config: AigentTeamConfig,
+    rootDir: string,
+  ): CompiledOutput[] {
+    const outputs: CompiledOutput[] = [];
+
+    // rules/ → AGENTS.md hub file
+    const sections = agents.map((agent) => {
+      const body = assembleSkillIndex(agent);
+      return `## ${agent.name} (${agent.id})\n\n${body}`;
+    });
+    const sharedKnowledge = agents
+      .flatMap((a) => a.sharedKnowledge)
+      .filter((v, i, arr) => arr.indexOf(v) === i && v)
+      .join('\n\n');
+    const agentsMd = [
+      `# Project Agents`,
+      ``,
+      `This project uses specialized AI agents for different team roles.`,
+      ``,
+      ...sections,
+      ``,
+      sharedKnowledge ? `## Shared Knowledge\n\n${sharedKnowledge}` : '',
+    ].filter(Boolean).join('\n\n');
+    outputs.push({
+      filePath: `${rootDir}/rules/AGENTS.md`,
+      content: agentsMd + '\n',
+      overwriteStrategy: 'replace',
+    });
+
+    // agents/ → agent index files
+    for (const agent of agents) {
+      const frontmatter = this.formatFrontmatter({
+        nickname_candidates: [agent.id, agent.role],
+        model: 'inherit',
+      });
+      const body = assembleSkillIndex(agent);
+      outputs.push({
+        filePath: `${rootDir}/agents/${agent.id}-agent.md`,
+        content: `${frontmatter}\n\n${body}\n`,
+        overwriteStrategy: 'replace',
+      });
+    }
+
+    // skills/ → skill files organized by agent
+    for (const agent of agents) {
+      if (!agent.skills?.length) continue;
+      for (const skill of agent.skills) {
+        outputs.push({
+          filePath: `${rootDir}/skills/${agent.id}/${skill.id}.md`,
+          content: assembleSkill(skill) + '\n',
+          overwriteStrategy: 'replace',
+        });
+      }
+    }
+
+    // kb/ → reference files organized by agent
+    for (const agent of agents) {
+      if (!agent.references?.length) continue;
+      for (const ref of agent.references) {
+        outputs.push({
+          filePath: `${rootDir}/kb/${agent.id}/${ref.id}.md`,
+          content: assembleReference(ref) + '\n',
+          overwriteStrategy: 'replace',
+        });
+      }
     }
 
     return outputs;

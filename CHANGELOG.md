@@ -4,6 +4,41 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.3.0] - 2026-03-30
+
+### Added
+
+- **Generate Scope (`--scope`)** — Control which output types are generated:
+  - `--scope agents` — only agent skill index + hub files
+  - `--scope skills` — only executable skill files
+  - `--scope references` — only reference files
+  - `--scope plugin` — self-contained plugin bundle with manifest
+  - Multi-scope: `--scope agents,skills` for combining scopes
+- **Team Filter (`--team`)** — Override config teams from CLI:
+  - `--team fe,be` — generate only for specified roles
+  - Combines with `--scope`: `--scope skills --team fe`
+- **Plugin System** — Generate, install, and uninstall plugin bundles:
+  - `aigent-team generate --scope plugin` — creates platform-agnostic bundle with `manifest.json`
+  - `aigent-team install <path>` — installs plugin by compiling to platform-native formats
+  - `aigent-team install <path> --force` — overwrite existing files
+  - `aigent-team install <path> --platform cursor` — install for specific platform only
+  - `aigent-team uninstall <name>` — removes all installed files + cleanup empty directories
+  - `aigent-team install <path> --cursor-user-plugin` — copies `cursor-ide-plugin/` from the bundle to `~/.cursor/plugins/local/<name>` ([Cursor Plugins](https://cursor.com/docs/plugins))
+  - Install records tracked at `.aigent-team/installed/{name}.json` for safe uninstall
+- `PluginCompiler` — platform-agnostic compiler producing `manifest.json` + agents/skills/references/shared + `cursor-ide-plugin/` (Cursor IDE bundle: `.cursor-plugin/plugin.json`, `rules/`, `skills/*/SKILL.md` per [plugins reference](https://cursor.com/docs/reference/plugins.md))
+- `PluginManifest` with per-agent metadata (`PluginAgentMeta`) for install reconstruction
+- `plugin-loader` module — reads plugin bundles and reconstructs `AgentDefinition[]`
+- `InstallRecord` type for tracking installed plugins
+- `output.pluginDir` config option for custom plugin output directory
+- `GenerateScope` type and `GENERATE_SCOPES` const
+
+### Changed
+
+- `BaseCompiler` refactored with decomposed methods: `compileHubFile()`, `compileAgentIndexes()`, `compileAllSkills()`, `compileAllReferences()`, `compileWithScope()`
+- All 4 platform compilers refactored to use decomposed methods (backward compatible — `compile()` delegates to `compileWithScope(['all'])`)
+- `GenerateOptions` expanded with `scopes` and `teams` fields
+- CLI version bumped to 0.2.0 → 0.3.0
+
 ## [0.2.0] - 2026-03-26
 
 ### Added

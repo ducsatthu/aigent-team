@@ -1,5 +1,5 @@
 import { BaseCompiler } from './base.compiler.js';
-import { assembleSkillIndex } from '../core/template-engine.js';
+import { assembleReference, assembleSkill, assembleSkillIndex } from '../core/template-engine.js';
 import type { AgentDefinition, AigentTeamConfig, CompiledOutput, Platform, ValidationResult } from '../core/types.js';
 
 // Tool name mapping: canonical → Antigravity
@@ -16,9 +16,10 @@ export class AntigravityCompiler extends BaseCompiler {
   readonly platform: Platform = 'antigravity';
 
   compile(agents: AgentDefinition[], config: AigentTeamConfig): CompiledOutput[] {
-    const outputs: CompiledOutput[] = [];
+    return this.compileWithScope(agents, config, ['all']);
+  }
 
-    // GEMINI.md - Antigravity-specific overrides
+  protected compileHubFile(agents: AgentDefinition[], _config: AigentTeamConfig): CompiledOutput[] {
     const agentList = agents
       .map((a) => `- **${a.name}** (\`${a.id}\`): ${a.description.trim().split('\n')[0]}`)
       .join('\n');
@@ -35,13 +36,16 @@ export class AntigravityCompiler extends BaseCompiler {
       ``,
     ].join('\n');
 
-    outputs.push({
+    return [{
       filePath: 'GEMINI.md',
       content: geminiMd,
       overwriteStrategy: 'replace',
-    });
+    }];
+  }
 
-    // .agents/skills/<team>-agent/SKILL.md for each agent
+  protected compileAgentIndexes(agents: AgentDefinition[], _config: AigentTeamConfig): CompiledOutput[] {
+    const outputs: CompiledOutput[] = [];
+
     for (const agent of agents) {
       const allowedTools = agent.tools.allowed
         .map((t) => TOOL_MAP[t] || t.toLowerCase())
@@ -61,20 +65,101 @@ export class AntigravityCompiler extends BaseCompiler {
         content,
         overwriteStrategy: 'replace',
       });
+    }
 
-      // Generate reference files
-      const refs = this.compileReferences(
-        agent,
-        `.agents/skills/${agent.id}-agent/references`,
-      );
-      outputs.push(...refs);
+    return outputs;
+  }
 
-      // Generate skill files
-      const skills = this.compileSkills(
+  protected compileAllSkills(agents: AgentDefinition[]): CompiledOutput[] {
+    const outputs: CompiledOutput[] = [];
+    for (const agent of agents) {
+      outputs.push(...this.compileSkills(
         agent,
         `.agents/skills/${agent.id}-agent/skills`,
-      );
-      outputs.push(...skills);
+      ));
+    }
+    return outputs;
+  }
+
+  protected compileAllReferences(agents: AgentDefinition[]): CompiledOutput[] {
+    const outputs: CompiledOutput[] = [];
+    for (const agent of agents) {
+      outputs.push(...this.compileReferences(
+        agent,
+        `.agents/skills/${agent.id}-agent/references`,
+      ));
+    }
+    return outputs;
+  }
+
+  compilePluginBundle(
+    agents: AgentDefinition[],
+    _config: AigentTeamConfig,
+    rootDir: string,
+  ): CompiledOutput[] {
+    const outputs: CompiledOutput[] = [];
+
+    // rules/ → GEMINI.md hub file
+    const agentList = agents
+      .map((a) => `- **${a.name}** (\`${a.id}\`): ${a.description.trim().split('\n')[0]}`)
+      .join('\n');
+    outputs.push({
+      filePath: `${rootDir}/rules/GEMINI.md`,
+      content: [
+        `# Antigravity Configuration`,
+        ``,
+        `## Available Agents`,
+        ``,
+        agentList,
+        ``,
+        `Agents are defined in the agents/ directory.`,
+        `Use the appropriate agent for team-specific tasks.`,
+        ``,
+      ].join('\n'),
+      overwriteStrategy: 'replace',
+    });
+
+    // agents/ → agent SKILL.md files (Antigravity format)
+    for (const agent of agents) {
+      const allowedTools = agent.tools.allowed
+        .map((t) => TOOL_MAP[t] || t.toLowerCase())
+        .filter((v, i, arr) => arr.indexOf(v) === i);
+
+      const frontmatter = this.formatFrontmatter({
+        name: `${agent.id}-agent`,
+        description: agent.description.trim().split('\n')[0],
+        'allowed-tools': allowedTools,
+      });
+      const body = assembleSkillIndex(agent);
+      outputs.push({
+        filePath: `${rootDir}/agents/${agent.id}-agent/SKILL.md`,
+        content: `${frontmatter}\n\n${body}\n`,
+        overwriteStrategy: 'replace',
+      });
+    }
+
+    // skills/ → skill files organized by agent
+    for (const agent of agents) {
+      if (!agent.skills?.length) continue;
+      for (const skill of agent.skills) {
+        outputs.push({
+          filePath: `${rootDir}/skills/${agent.id}/${skill.id}.md`,
+          content: assembleSkill(skill) + '\n',
+          overwriteStrategy: 'replace',
+        });
+      }
+    }
+
+    // kb/ → reference files organized by agent
+    for (const agent of agents) {
+      if (!agent.references?.length) continue;
+      for (const ref of agent.references) {
+        outputs.push({
+          filePath: `${rootDir}/kb/${agent.id}/${ref.id}.md`,
+          content: assembleReference(ref) + '\n',
+          overwriteStrategy: 'replace',
+        });
+      }
     }
 
     return outputs;

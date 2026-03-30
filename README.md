@@ -89,6 +89,72 @@ npx aigent-team generate
 
 Generates agent configs for all configured platforms. Run this after changing your config or updating aigent-team.
 
+#### Scope filtering
+
+Generate only specific output types:
+
+```bash
+# Only agent skill index files (no references or skills)
+npx aigent-team generate --scope agents
+
+# Only executable skill files
+npx aigent-team generate --scope skills
+
+# Only reference docs
+npx aigent-team generate --scope references
+
+# Combine scopes
+npx aigent-team generate --scope agents,skills
+```
+
+#### Team filtering
+
+Override the config's `teams` array from the CLI:
+
+```bash
+# Generate only for FE and BE agents
+npx aigent-team generate --team fe,be
+
+# Combine with scope: only skills for QA
+npx aigent-team generate --scope skills --team qa
+```
+
+### Plugin system
+
+Create a self-contained, platform-agnostic plugin bundle:
+
+```bash
+# Generate plugin bundle
+npx aigent-team generate --scope plugin
+```
+
+This creates a `.aigent-team-plugin/` directory (configurable via `output.pluginDir`) containing:
+
+```
+.aigent-team-plugin/
+├── manifest.json           # Metadata: version, roles, platforms, agent info
+├── agents/                 # Platform-agnostic agent skill indexes
+├── skills/{role}/          # Executable skill files by role
+├── references/{role}/      # Reference docs by role
+└── shared/                 # Shared knowledge files
+```
+
+Install a plugin into a project:
+
+```bash
+# Install plugin — converts to platform-native formats
+npx aigent-team install ./path/to/plugin
+
+# Install for specific platform only
+npx aigent-team install ./plugin --platform cursor
+
+# Overwrite existing files
+npx aigent-team install ./plugin --force
+
+# Uninstall — removes all files installed by the plugin
+npx aigent-team uninstall my-plugin-name
+```
+
 ### Validate
 
 ```bash
@@ -132,6 +198,7 @@ Create `aigent-team.config.json` (or `.ts` / `.js`) in your project root:
 | `teams` | `string[]` | Yes | Agent teams to enable: `lead`, `ba`, `fe`, `be`, `qa`, `devops` |
 | `overrides` | `object` | No | Per-team overrides for `techStack`, `tools`, `globs` |
 | `overrides.<team>.techStack` | `object` | No | Override `languages`, `frameworks`, `libraries`, `buildTools` |
+| `output.pluginDir` | `string` | No | Plugin output directory (default: `.aigent-team-plugin/`) |
 
 ### Programmatic config
 
@@ -153,11 +220,15 @@ export default defineConfig({
 });
 ```
 
-### Platform-specific flags
+### CLI flags
 
 ```bash
-# Generate only for a specific platform
-npx aigent-team generate --platform claude-code
+npx aigent-team generate --platform claude-code    # Single platform
+npx aigent-team generate --scope skills            # Only skill files
+npx aigent-team generate --team fe,be              # Only FE + BE agents
+npx aigent-team generate --scope plugin            # Plugin bundle
+npx aigent-team install ./plugin --force           # Install plugin
+npx aigent-team uninstall my-app                   # Remove plugin
 ```
 
 ## Generated output
@@ -316,9 +387,11 @@ This mirrors how a real tech lead operates — delegating to specialists and ens
 
 | Document | Description |
 |---|---|
-| [Architecture](docs/architecture.md) | System design, data flow, module map, compiler pattern |
-| [Agent Reference](docs/agents.md) | All 6 agents — roles, capabilities, reference file catalog |
-| [Vision & Roadmap](docs/vision.md) | Future plans, design principles, platform expansion |
+| [Docs Index](docs/INDEX.md) | Entry point for all documentation, version history, RFC tracker |
+| [Architecture](docs/base/architecture.md) | System design, data flow, module map, compiler pattern |
+| [Agent Reference](docs/base/agents.md) | All 6 agents — roles, capabilities, reference file catalog |
+| [Vision & Roadmap](docs/base/vision.md) | Future plans, design principles, platform expansion |
+| [RFC-001: Scope & Plugin](docs/rfcs/rfc-001-generate-scope.md) | `--scope`, `--team`, plugin system design |
 | [Contributing](CONTRIBUTING.md) | Development setup, how to add agents/compilers |
 | [Changelog](CHANGELOG.md) | Release history |
 

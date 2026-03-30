@@ -3,7 +3,8 @@
   "platforms": [
     "claude-code",
     "cursor",
-    "codex"
+    "codex",
+    "antigravity"
   ],
   "teams": [
     "lead",

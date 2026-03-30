@@ -1,11 +1,36 @@
 import { BaseCompiler } from './base.compiler.js';
-import { assembleSkillIndex } from '../core/template-engine.js';
+import { assembleReference, assembleSkill, assembleSkillIndex } from '../core/template-engine.js';
+import { toKebabCursorPluginId } from './cursor-ide-plugin.compiler.js';
 import type { AgentDefinition, AigentTeamConfig, CompiledOutput, Platform, ValidationResult } from '../core/types.js';
 
 export class CursorCompiler extends BaseCompiler {
   readonly platform: Platform = 'cursor';
 
   compile(agents: AgentDefinition[], config: AigentTeamConfig): CompiledOutput[] {
+    return this.compileWithScope(agents, config, ['all']);
+  }
+
+  protected compileHubFile(agents: AgentDefinition[], _config: AigentTeamConfig): CompiledOutput[] {
+    const sharedKnowledge = agents
+      .flatMap((a) => a.sharedKnowledge)
+      .filter((v, i, arr) => arr.indexOf(v) === i && v)
+      .join('\n\n---\n\n');
+
+    if (!sharedKnowledge) return [];
+
+    const frontmatter = this.formatFrontmatter({
+      description: 'Shared project conventions and knowledge for all team agents',
+      alwaysApply: true,
+    });
+
+    return [{
+      filePath: '.cursor/rules/shared-conventions.mdc',
+      content: `${frontmatter}\n\n${sharedKnowledge}\n`,
+      overwriteStrategy: 'replace',
+    }];
+  }
+
+  protected compileAgentIndexes(agents: AgentDefinition[], _config: AigentTeamConfig): CompiledOutput[] {
     const outputs: CompiledOutput[] = [];
 
     for (const agent of agents) {
@@ -28,43 +53,88 @@ export class CursorCompiler extends BaseCompiler {
         content,
         overwriteStrategy: 'replace',
       });
+    }
 
-      // Generate reference files as glob-scoped .mdc rules
-      if (agent.references?.length) {
-        for (const ref of agent.references) {
-          const refFrontmatter = this.formatFrontmatter({
-            description: `${agent.name} reference: ${ref.title}`,
-            alwaysApply: false,
-            globs: globs || undefined,
-          });
+    return outputs;
+  }
 
-          outputs.push({
-            filePath: `.cursor/rules/${agent.id}-refs/${ref.id}.mdc`,
-            content: `${refFrontmatter}\n\n${ref.content}\n`,
-            overwriteStrategy: 'replace',
-          });
-        }
-      }
+  protected compileAllSkills(agents: AgentDefinition[]): CompiledOutput[] {
+    const outputs: CompiledOutput[] = [];
 
-      // Generate skill files as glob-scoped .mdc rules
-      if (agent.skills?.length) {
-        for (const skill of agent.skills) {
-          const skillFrontmatter = this.formatFrontmatter({
-            description: `${agent.name} skill: ${skill.name}`,
-            alwaysApply: false,
-            globs: globs || undefined,
-          });
+    for (const agent of agents) {
+      if (!agent.skills?.length) continue;
+      const globs = agent.globs?.length ? agent.globs.join(', ') : undefined;
 
-          outputs.push({
-            filePath: `.cursor/rules/${agent.id}-skills/${skill.id}.mdc`,
-            content: `${skillFrontmatter}\n\n${skill.content}\n`,
-            overwriteStrategy: 'replace',
-          });
-        }
+      for (const skill of agent.skills) {
+        const skillFrontmatter = this.formatFrontmatter({
+          description: `${agent.name} skill: ${skill.name}`,
+          alwaysApply: false,
+          globs: globs || undefined,
+        });
+
+        outputs.push({
+          filePath: `.cursor/rules/${agent.id}-skills/${skill.id}.mdc`,
+          content: `${skillFrontmatter}\n\n${skill.content}\n`,
+          overwriteStrategy: 'replace',
+        });
       }
     }
 
-    // Shared conventions rule (always applied)
+    return outputs;
+  }
+
+  protected compileAllReferences(agents: AgentDefinition[]): CompiledOutput[] {
+    const outputs: CompiledOutput[] = [];
+
+    for (const agent of agents) {
+      if (!agent.references?.length) continue;
+      const globs = agent.globs?.length ? agent.globs.join(', ') : undefined;
+
+      for (const ref of agent.references) {
+        const refFrontmatter = this.formatFrontmatter({
+          description: `${agent.name} reference: ${ref.title}`,
+          alwaysApply: false,
+          globs: globs || undefined,
+        });
+
+        outputs.push({
+          filePath: `.cursor/rules/${agent.id}-refs/${ref.id}.mdc`,
+          content: `${refFrontmatter}\n\n${ref.content}\n`,
+          overwriteStrategy: 'replace',
+        });
+      }
+    }
+
+    return outputs;
+  }
+
+  compilePluginBundle(
+    agents: AgentDefinition[],
+    config: AigentTeamConfig,
+    rootDir: string,
+  ): CompiledOutput[] {
+    const outputs: CompiledOutput[] = [];
+    const pluginId = toKebabCursorPluginId(config.projectName);
+    const firstLine = (text: string) => text.trim().split('\n')[0] ?? '';
+
+    outputs.push({
+      filePath: `${rootDir}/.cursor-plugin/plugin.json`,
+      content:
+        JSON.stringify(
+          {
+            name: pluginId,
+            version: '0.1.0',
+            description: `Agent team pack for ${config.projectName} (generated by aigent-team)`,
+            keywords: ['aigent-team', 'agents'],
+            author: { name: 'aigent-team' },
+          },
+          null,
+          2,
+        ) + '\n',
+      overwriteStrategy: 'replace',
+    });
+
+    // rules/ → shared conventions
     const sharedKnowledge = agents
       .flatMap((a) => a.sharedKnowledge)
       .filter((v, i, arr) => arr.indexOf(v) === i && v)
@@ -75,12 +145,65 @@ export class CursorCompiler extends BaseCompiler {
         description: 'Shared project conventions and knowledge for all team agents',
         alwaysApply: true,
       });
-
       outputs.push({
-        filePath: '.cursor/rules/shared-conventions.mdc',
+        filePath: `${rootDir}/rules/shared-conventions.mdc`,
         content: `${frontmatter}\n\n${sharedKnowledge}\n`,
         overwriteStrategy: 'replace',
       });
+    }
+
+    // agents/ → agent definition rules (.mdc)
+    for (const agent of agents) {
+      const globs = agent.globs?.length ? agent.globs.join(', ') : undefined;
+      const frontmatterData: Record<string, unknown> = {
+        description: firstLine(agent.description),
+        alwaysApply: !globs,
+      };
+      if (globs) frontmatterData.globs = globs;
+      const frontmatter = this.formatFrontmatter(frontmatterData);
+      const body = assembleSkillIndex(agent);
+      outputs.push({
+        filePath: `${rootDir}/agents/${agent.id}-agent.mdc`,
+        content: `${frontmatter}\n\n${body}\n`,
+        overwriteStrategy: 'replace',
+      });
+    }
+
+    // skills/ → skill files (SKILL.md per Cursor plugin convention)
+    for (const agent of agents) {
+      if (!agent.skills?.length) continue;
+      for (const skill of agent.skills) {
+        const skillId = `${agent.id}-${skill.id}`;
+        const descSource =
+          skill.description?.trim() || skill.name?.trim() || skill.trigger?.trim() || `Procedure for ${agent.name}`;
+        const skillFrontmatter = this.formatFrontmatter({
+          name: skillId,
+          description: firstLine(descSource),
+        });
+        outputs.push({
+          filePath: `${rootDir}/skills/${skillId}/SKILL.md`,
+          content: `${skillFrontmatter}\n\n${assembleSkill(skill)}\n`,
+          overwriteStrategy: 'replace',
+        });
+      }
+    }
+
+    // kb/ → reference files (.mdc)
+    for (const agent of agents) {
+      if (!agent.references?.length) continue;
+      const globs = agent.globs?.length ? agent.globs.join(', ') : undefined;
+      for (const ref of agent.references) {
+        const refFrontmatter = this.formatFrontmatter({
+          description: `${agent.name} reference: ${ref.title}`,
+          alwaysApply: false,
+          globs: globs || undefined,
+        });
+        outputs.push({
+          filePath: `${rootDir}/kb/${agent.id}-refs/${ref.id}.mdc`,
+          content: `${refFrontmatter}\n\n${assembleReference(ref)}\n`,
+          overwriteStrategy: 'replace',
+        });
+      }
     }
 
     return outputs;
