@@ -1,4 +1,3 @@
-import { assembleSkillIndex, assembleReference, assembleSkill } from '../core/template-engine.js';
 import { getCompiler } from './index.js';
 import type {
   AgentDefinition,
@@ -18,46 +17,7 @@ export class PluginCompiler {
   ): CompiledOutput[] {
     const outputs: CompiledOutput[] = [];
 
-    // Platform-agnostic agent index files
-    for (const agent of agents) {
-      const body = assembleSkillIndex(agent);
-      outputs.push({
-        filePath: `${pluginDir}/agents/${agent.id}-agent.md`,
-        content: body + '\n',
-        overwriteStrategy: 'replace',
-      });
-
-      for (const skill of agent.skills) {
-        outputs.push({
-          filePath: `${pluginDir}/skills/${agent.role}/${skill.id}.md`,
-          content: assembleSkill(skill) + '\n',
-          overwriteStrategy: 'replace',
-        });
-      }
-
-      for (const ref of agent.references) {
-        outputs.push({
-          filePath: `${pluginDir}/references/${agent.role}/${ref.id}.md`,
-          content: assembleReference(ref) + '\n',
-          overwriteStrategy: 'replace',
-        });
-      }
-    }
-
-    // Shared knowledge files
-    const sharedKnowledge = agents
-      .flatMap((a) => a.sharedKnowledge)
-      .filter((v, i, arr) => arr.indexOf(v) === i && v);
-
-    for (let i = 0; i < sharedKnowledge.length; i++) {
-      outputs.push({
-        filePath: `${pluginDir}/shared/knowledge-${i + 1}.md`,
-        content: sharedKnowledge[i] + '\n',
-        overwriteStrategy: 'replace',
-      });
-    }
-
-    // Per-platform plugin bundles
+    // Per-platform plugin bundles (self-contained — all kb, skills, refs, shared inside)
     const bundles: PluginPlatformBundle[] = [];
 
     for (const platform of config.platforms) {

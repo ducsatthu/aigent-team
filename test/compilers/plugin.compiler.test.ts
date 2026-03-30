@@ -60,36 +60,61 @@ describe('PluginCompiler', () => {
     expect(parsed.agents[0].globs).toEqual(['**/*.tsx']);
   });
 
-  it('should generate agent index files', () => {
+  it('should not generate top-level platform-agnostic files', () => {
     const outputs = compiler.compilePlugin([mockAgent], mockConfig);
-    const agentFile = outputs.find((o) => o.filePath.includes('/agents/fe-agent.md'));
+    const topLevelAgents = outputs.filter((o) =>
+      o.filePath.match(/^\.aigent-team-plugin\/agents\//)
+    );
+    const topLevelSkills = outputs.filter((o) =>
+      o.filePath.match(/^\.aigent-team-plugin\/skills\//)
+    );
+    const topLevelRefs = outputs.filter((o) =>
+      o.filePath.match(/^\.aigent-team-plugin\/references\//)
+    );
+    const topLevelShared = outputs.filter((o) =>
+      o.filePath.match(/^\.aigent-team-plugin\/shared\//)
+    );
 
-    expect(agentFile).toBeDefined();
-    expect(agentFile!.content).toContain('Frontend Agent');
+    expect(topLevelAgents).toHaveLength(0);
+    expect(topLevelSkills).toHaveLength(0);
+    expect(topLevelRefs).toHaveLength(0);
+    expect(topLevelShared).toHaveLength(0);
   });
 
-  it('should generate skill files organized by role', () => {
+  it('should include agents inside platform bundles', () => {
     const outputs = compiler.compilePlugin([mockAgent], mockConfig);
-    const skillFile = outputs.find((o) => o.filePath.includes('/skills/fe/analyze-bundle.md'));
-
-    expect(skillFile).toBeDefined();
-    expect(skillFile!.content).toContain('# Analyze Bundle');
+    const bundleAgent = outputs.find((o) =>
+      o.filePath.includes('claude-code-plugin/agents/fe-agent.md')
+    );
+    expect(bundleAgent).toBeDefined();
+    expect(bundleAgent!.content).toContain('Frontend Agent');
   });
 
-  it('should generate reference files organized by role', () => {
+  it('should include skills inside platform bundles', () => {
     const outputs = compiler.compilePlugin([mockAgent], mockConfig);
-    const refFile = outputs.find((o) => o.filePath.includes('/references/fe/perf-guide.md'));
-
-    expect(refFile).toBeDefined();
-    expect(refFile!.content).toContain('# Perf Guide');
+    const bundleSkill = outputs.find((o) =>
+      o.filePath.includes('claude-code-plugin/skills/fe/analyze-bundle.md')
+    );
+    expect(bundleSkill).toBeDefined();
+    expect(bundleSkill!.content).toContain('# Analyze Bundle');
   });
 
-  it('should generate shared knowledge files', () => {
+  it('should include references inside platform bundles', () => {
     const outputs = compiler.compilePlugin([mockAgent], mockConfig);
-    const shared = outputs.find((o) => o.filePath.includes('/shared/knowledge-1.md'));
+    const bundleRef = outputs.find((o) =>
+      o.filePath.includes('claude-code-plugin/kb/fe/perf-guide.md')
+    );
+    expect(bundleRef).toBeDefined();
+    expect(bundleRef!.content).toContain('# Perf Guide');
+  });
 
-    expect(shared).toBeDefined();
-    expect(shared!.content).toContain('Shared conventions content');
+  it('should include shared knowledge inside platform bundles', () => {
+    const outputs = compiler.compilePlugin([mockAgent], mockConfig);
+    const bundleShared = outputs.find((o) =>
+      o.filePath.includes('claude-code-plugin/kb/shared/knowledge-1.md')
+    );
+    expect(bundleShared).toBeDefined();
+    expect(bundleShared!.content).toContain('Shared conventions content');
   });
 
   it('should respect custom pluginDir', () => {
@@ -111,7 +136,8 @@ describe('PluginCompiler', () => {
     };
     const outputs = compiler.compilePlugin([bareAgent], mockConfig);
 
-    expect(outputs.some((o) => o.filePath.includes('/agents/'))).toBe(true);
+    // Should still have platform bundle agents and manifest
+    expect(outputs.some((o) => o.filePath.includes('claude-code-plugin/agents/'))).toBe(true);
     expect(outputs.some((o) => o.filePath.endsWith('manifest.json'))).toBe(true);
   });
 

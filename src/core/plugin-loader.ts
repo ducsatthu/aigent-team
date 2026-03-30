@@ -22,25 +22,28 @@ export function loadPlugin(pluginPath: string): LoadedPlugin {
     throw new Error('Plugin manifest has no agents metadata. Was it generated with aigent-team >= 0.3.0?');
   }
 
-  // Reconstruct AgentDefinition[] from plugin files + manifest metadata
+  // Find the first available platform bundle to read from
+  const bundleDir = findBundleDir(absPath, manifest);
+
+  // Reconstruct AgentDefinition[] from platform bundle files + manifest metadata
   const agents: AgentDefinition[] = [];
 
   for (const meta of manifest.agents) {
     // Read agent index (already-assembled skill content)
-    const agentFilePath = resolve(absPath, 'agents', `${meta.id}-agent.md`);
+    const agentFilePath = resolve(bundleDir, 'agents', `${meta.id}-agent.md`);
     if (!existsSync(agentFilePath)) {
       throw new Error(`Agent file not found: ${agentFilePath}`);
     }
     const skillContent = readFileSync(agentFilePath, 'utf-8').trim();
 
-    // Read skill files for this agent's role
-    const skills = loadSkillFiles(resolve(absPath, 'skills', meta.role));
+    // Read skill files for this agent
+    const skills = loadSkillFiles(resolve(bundleDir, 'skills', meta.id));
 
-    // Read reference files for this agent's role
-    const references = loadReferenceFiles(resolve(absPath, 'references', meta.role));
+    // Read reference files for this agent
+    const references = loadReferenceFiles(resolve(bundleDir, 'kb', meta.id));
 
     // Read shared knowledge
-    const sharedKnowledge = loadSharedKnowledge(resolve(absPath, 'shared'));
+    const sharedKnowledge = loadSharedKnowledge(resolve(bundleDir, 'kb', 'shared'));
 
     agents.push({
       id: meta.id,
@@ -67,6 +70,24 @@ export function loadPlugin(pluginPath: string): LoadedPlugin {
   }
 
   return { manifest, agents };
+}
+
+function findBundleDir(absPath: string, manifest: PluginManifest): string {
+  // Prefer claude-code bundle, then fall back to first available
+  const preferred = ['claude-code-plugin', 'cursor-ide-plugin', 'codex-plugin', 'antigravity-plugin'];
+
+  for (const dir of preferred) {
+    const candidate = resolve(absPath, dir);
+    if (existsSync(candidate)) return candidate;
+  }
+
+  // Try from manifest bundles
+  for (const bundle of manifest.bundles ?? []) {
+    const candidate = resolve(absPath, bundle.directory);
+    if (existsSync(candidate)) return candidate;
+  }
+
+  throw new Error(`No platform bundle found in plugin: ${absPath}`);
 }
 
 function loadSkillFiles(dir: string): SkillFile[] {

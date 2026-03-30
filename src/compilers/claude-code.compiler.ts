@@ -150,6 +150,19 @@ export class ClaudeCodeCompiler extends BaseCompiler {
       }
     }
 
+    // kb/shared/ → shared knowledge files
+    const sharedKnowledge = agents
+      .flatMap((a) => a.sharedKnowledge)
+      .filter((v, i, arr) => arr.indexOf(v) === i && v);
+
+    for (let i = 0; i < sharedKnowledge.length; i++) {
+      outputs.push({
+        filePath: `${rootDir}/kb/shared/knowledge-${i + 1}.md`,
+        content: sharedKnowledge[i] + '\n',
+        overwriteStrategy: 'replace',
+      });
+    }
+
     return outputs;
   }
 

@@ -6,6 +6,8 @@ import type { PluginManifest } from '../../src/core/types.js';
 
 const FIXTURE_DIR = resolve(__dirname, '../fixtures/test-plugin');
 
+const BUNDLE = 'claude-code-plugin';
+
 const testManifest: PluginManifest = {
   name: 'test-plugin',
   version: '0.1.0',
@@ -25,20 +27,21 @@ const testManifest: PluginManifest = {
     },
   ],
   files: { agents: 1, skills: 1, references: 1 },
+  bundles: [{ platform: 'claude-code', directory: BUNDLE, artifacts: { agents: 1, skills: 1, kb: 1 } }],
 };
 
 beforeAll(() => {
-  // Create fixture directory structure
-  mkdirSync(resolve(FIXTURE_DIR, 'agents'), { recursive: true });
-  mkdirSync(resolve(FIXTURE_DIR, 'skills/fe'), { recursive: true });
-  mkdirSync(resolve(FIXTURE_DIR, 'references/fe'), { recursive: true });
-  mkdirSync(resolve(FIXTURE_DIR, 'shared'), { recursive: true });
+  // Create fixture directory structure inside platform bundle
+  mkdirSync(resolve(FIXTURE_DIR, BUNDLE, 'agents'), { recursive: true });
+  mkdirSync(resolve(FIXTURE_DIR, BUNDLE, 'skills/fe'), { recursive: true });
+  mkdirSync(resolve(FIXTURE_DIR, BUNDLE, 'kb/fe'), { recursive: true });
+  mkdirSync(resolve(FIXTURE_DIR, BUNDLE, 'kb/shared'), { recursive: true });
 
   writeFileSync(resolve(FIXTURE_DIR, 'manifest.json'), JSON.stringify(testManifest, null, 2));
-  writeFileSync(resolve(FIXTURE_DIR, 'agents/fe-agent.md'), '# Frontend Agent\n\nSkill index content here.');
-  writeFileSync(resolve(FIXTURE_DIR, 'skills/fe/analyze-bundle.md'), '# Analyze Bundle\n\nStep 1...');
-  writeFileSync(resolve(FIXTURE_DIR, 'references/fe/perf-guide.md'), '# Performance Guide\n\nContent...');
-  writeFileSync(resolve(FIXTURE_DIR, 'shared/knowledge-1.md'), 'Shared conventions content');
+  writeFileSync(resolve(FIXTURE_DIR, BUNDLE, 'agents/fe-agent.md'), '# Frontend Agent\n\nSkill index content here.');
+  writeFileSync(resolve(FIXTURE_DIR, BUNDLE, 'skills/fe/analyze-bundle.md'), '# Analyze Bundle\n\nStep 1...');
+  writeFileSync(resolve(FIXTURE_DIR, BUNDLE, 'kb/fe/perf-guide.md'), '# Performance Guide\n\nContent...');
+  writeFileSync(resolve(FIXTURE_DIR, BUNDLE, 'kb/shared/knowledge-1.md'), 'Shared conventions content');
 });
 
 afterAll(() => {

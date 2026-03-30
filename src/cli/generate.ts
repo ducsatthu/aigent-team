@@ -1,14 +1,17 @@
 import { writeFileSync, mkdirSync, existsSync, readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
+import inquirer from 'inquirer';
 import chalk from 'chalk';
 import { loadConfig } from '../core/config-loader.js';
 import { loadAgents } from '../core/agent-loader.js';
 import { getAllCompilers } from '../compilers/index.js';
 import { PluginCompiler } from '../compilers/plugin.compiler.js';
+import { PLATFORMS, TEAM_ROLES } from '../core/types.js';
 import type { CompiledOutput, GenerateScope, Platform, TeamRole } from '../core/types.js';
 
 export interface GenerateOptions {
   platform?: Platform;
+  platforms?: Platform[];
   scopes?: GenerateScope[];
   teams?: TeamRole[];
 }
@@ -48,8 +51,80 @@ function writeOutputs(outputs: CompiledOutput[], cwd: string, label: string): nu
   return written;
 }
 
+async function promptGenerateOptions(configTeams: readonly string[], configPlatforms: readonly string[]): Promise<GenerateOptions> {
+  const { mode } = await inquirer.prompt([
+    {
+      type: 'list',
+      name: 'mode',
+      message: 'Generate mode:',
+      choices: [
+        { name: 'Platform configs (agents, skills, references)', value: 'platform' },
+        { name: 'Plugin bundle', value: 'plugin' },
+      ],
+    },
+  ]);
+
+  if (mode === 'plugin') {
+    return { scopes: ['plugin'] };
+  }
+
+  const answers = await inquirer.prompt([
+    {
+      type: 'checkbox',
+      name: 'scopes',
+      message: 'What to generate:',
+      choices: [
+        { name: 'Agents', value: 'agents', checked: true },
+        { name: 'Skills', value: 'skills', checked: true },
+        { name: 'References', value: 'references', checked: true },
+      ],
+    },
+    {
+      type: 'checkbox',
+      name: 'teams',
+      message: 'Team agents:',
+      choices: TEAM_ROLES.map((role) => ({
+        name: role,
+        value: role,
+        checked: configTeams.includes(role),
+      })),
+      validate: (input: string[]) =>
+        input.length > 0 || 'Select at least one team',
+    },
+    {
+      type: 'checkbox',
+      name: 'platforms',
+      message: 'Target platforms:',
+      choices: PLATFORMS.map((p) => ({
+        name: p,
+        value: p,
+        checked: configPlatforms.includes(p),
+      })),
+      validate: (input: string[]) =>
+        input.length > 0 || 'Select at least one platform',
+    },
+  ]);
+
+  const scopes: GenerateScope[] = answers.scopes.length > 0 ? answers.scopes : ['all'];
+
+  return {
+    scopes,
+    teams: answers.teams as TeamRole[],
+    platforms: answers.platforms as Platform[],
+  };
+}
+
 export async function runGenerate(cwd: string = process.cwd(), options: GenerateOptions = {}) {
   const config = await loadConfig(cwd);
+
+  // Interactive mode when no flags provided
+  const hasFlags = options.platform || options.platforms || options.teams ||
+    (options.scopes && !(options.scopes.length === 1 && options.scopes[0] === 'all'));
+
+  if (!hasFlags) {
+    const prompted = await promptGenerateOptions(config.teams, config.platforms);
+    options = { ...options, ...prompted };
+  }
 
   // --team override
   const effectiveConfig = options.teams
@@ -70,7 +145,7 @@ export async function runGenerate(cwd: string = process.cwd(), options: Generate
   }
 
   // Normal mode — per platform with scope filtering
-  const platforms = options.platform ? [options.platform] : effectiveConfig.platforms;
+  const platforms = options.platform ? [options.platform] : options.platforms ?? effectiveConfig.platforms;
   const compilers = getAllCompilers(platforms);
 
   let totalFiles = 0;

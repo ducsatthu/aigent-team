@@ -5,7 +5,6 @@ import chalk from 'chalk';
 import { PLATFORMS, TEAM_ROLES, type Platform, type TeamRole } from '../core/types.js';
 import { detectPlatforms } from '../detectors/platform-detector.js';
 import { configExists } from '../core/config-loader.js';
-import { runGenerate } from './generate.js';
 
 export async function runInit(cwd: string = process.cwd()) {
   console.log(chalk.bold('\n🤖 aigent-team init\n'));
@@ -83,13 +82,9 @@ export async function runInit(cwd: string = process.cwd()) {
   writeFileSync(configPath, JSON.stringify(config, null, 2) + '\n');
   console.log(chalk.green(`\n✓ Created ${configPath}`));
 
-  // Run generate
-  console.log(chalk.dim('\nGenerating platform configs...'));
-  await runGenerate(cwd);
-
   console.log(chalk.bold.green('\n✅ aigent-team initialized successfully!\n'));
   console.log(chalk.dim('Next steps:'));
-  console.log(chalk.dim('  - Edit aigent-team.config.json to customize agents'));
-  console.log(chalk.dim('  - Run `aigent-team generate` after making changes'));
-  console.log(chalk.dim('  - Add .aigent-team/teams/<role>/ for local overrides\n'));
+  console.log(chalk.dim('  - Review aigent-team.config.json and adjust if needed'));
+  console.log(chalk.dim('  - Run `aigent-team generate` to generate platform configs'));
+  console.log(chalk.dim('  - Use `aigent-team generate --scope agents,skills` to control what gets generated\n'));
 }
