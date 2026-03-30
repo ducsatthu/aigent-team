@@ -81,13 +81,21 @@ Interactive wizard that:
 2. Lets you pick which team agents to enable
 3. Creates `aigent-team.config.json`
 
+> **Note:** `init` only creates the config file. Run `aigent-team generate` to generate platform configs.
+
 ### Generate
 
 ```bash
 npx aigent-team generate
 ```
 
-Generates agent configs for all configured platforms. Run this after changing your config or updating aigent-team.
+When run without flags, an interactive wizard lets you choose:
+- **Generate mode**: Platform configs or Plugin bundle
+- **Scopes**: Agents, Skills, References
+- **Team agents**: which roles to generate
+- **Target platforms**: which platforms to generate for
+
+You can also pass flags to skip the wizard:
 
 #### Scope filtering
 
@@ -121,23 +129,38 @@ npx aigent-team generate --scope skills --team qa
 
 ### Plugin system
 
-Create a self-contained, platform-agnostic plugin bundle:
+Create a self-contained plugin bundle:
 
 ```bash
 # Generate plugin bundle
 npx aigent-team generate --scope plugin
+
+# Or select "Plugin bundle" in the interactive wizard
+npx aigent-team generate
 ```
 
-This creates a `.aigent-team-plugin/` directory (configurable via `output.pluginDir`) containing:
+This creates a `.aigent-team-plugin/` directory (configurable via `output.pluginDir`) with self-contained per-platform bundles:
 
 ```
 .aigent-team-plugin/
-├── manifest.json           # Metadata: version, roles, platforms, agent info
-├── agents/                 # Platform-agnostic agent skill indexes
-├── skills/{role}/          # Executable skill files by role
-├── references/{role}/      # Reference docs by role
-└── shared/                 # Shared knowledge files
+├── manifest.json              # Metadata: version, roles, platforms, agent info
+├── claude-code-plugin/        # Self-contained Claude Code bundle
+│   ├── rules/                 # Hub file (CLAUDE.md)
+│   ├── agents/                # Agent skill indexes
+│   ├── skills/{agent}/        # Executable skill files
+│   └── kb/                    # References + shared knowledge
+│       ├── {agent}/           # Per-agent reference docs
+│       └── shared/            # Shared knowledge files
+├── cursor-ide-plugin/         # Self-contained Cursor bundle
+│   ├── .cursor-plugin/        # Plugin manifest
+│   ├── rules/                 # Shared conventions
+│   ├── agents/                # Agent .mdc files
+│   ├── skills/                # Skill files
+│   └── kb/                    # References
+└── ...                        # Other platform bundles
 ```
+
+Each platform bundle is fully self-contained — all agents, skills, references, and shared knowledge are inside. Users can distribute or install any bundle independently.
 
 Install a plugin into a project:
 

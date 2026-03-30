@@ -8,6 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ### Added
 
+- **Interactive `generate` command** — When running `aigent-team generate` without flags, an interactive wizard prompts for:
+  - Generate mode: Platform configs or Plugin bundle
+  - Scopes: Agents, Skills, References (checkbox selection)
+  - Team agents: select which roles to generate (defaults from config)
+  - Target platforms: select which platforms to generate for (defaults from config)
 - **Generate Scope (`--scope`)** — Control which output types are generated:
   - `--scope agents` — only agent skill index + hub files
   - `--scope skills` — only executable skill files
@@ -25,7 +30,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
   - `aigent-team uninstall <name>` — removes all installed files + cleanup empty directories
   - `aigent-team install <path> --cursor-user-plugin` — copies `cursor-ide-plugin/` from the bundle to `~/.cursor/plugins/local/<name>` ([Cursor Plugins](https://cursor.com/docs/plugins))
   - Install records tracked at `.aigent-team/installed/{name}.json` for safe uninstall
-- `PluginCompiler` — platform-agnostic compiler producing `manifest.json` + agents/skills/references/shared + `cursor-ide-plugin/` (Cursor IDE bundle: `.cursor-plugin/plugin.json`, `rules/`, `skills/*/SKILL.md` per [plugins reference](https://cursor.com/docs/reference/plugins.md))
+- `PluginCompiler` — generates self-contained per-platform bundles inside plugin directory + `manifest.json`. Each bundle (e.g. `claude-code-plugin/`, `cursor-ide-plugin/`) contains all agents, skills, kb (references + shared knowledge), and rules
 - `PluginManifest` with per-agent metadata (`PluginAgentMeta`) for install reconstruction
 - `plugin-loader` module — reads plugin bundles and reconstructs `AgentDefinition[]`
 - `InstallRecord` type for tracking installed plugins
@@ -34,9 +39,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ### Changed
 
+- **`init` no longer auto-generates** — `aigent-team init` now only creates `aigent-team.config.json`. Run `aigent-team generate` separately to generate platform configs with full scope/team control.
+- **Plugin structure simplified** — Plugin output no longer duplicates top-level `agents/`, `skills/`, `references/`, `shared/` directories. All content is self-contained inside per-platform bundles (e.g. `claude-code-plugin/`, `cursor-ide-plugin/`).
+- **Shared knowledge in all bundles** — Claude Code and Antigravity plugin bundles now include shared knowledge files under `kb/shared/` (Cursor and Codex already included them).
+- `plugin-loader` reads from platform bundles instead of top-level directories, preferring `claude-code-plugin/` as canonical source.
 - `BaseCompiler` refactored with decomposed methods: `compileHubFile()`, `compileAgentIndexes()`, `compileAllSkills()`, `compileAllReferences()`, `compileWithScope()`
 - All 4 platform compilers refactored to use decomposed methods (backward compatible — `compile()` delegates to `compileWithScope(['all'])`)
-- `GenerateOptions` expanded with `scopes` and `teams` fields
+- `GenerateOptions` expanded with `scopes`, `teams`, and `platforms` fields
 - CLI version bumped to 0.2.0 → 0.3.0
 
 ## [0.2.0] - 2026-03-26
