@@ -121,7 +121,7 @@ export async function runGenerate(cwd: string = process.cwd(), options: Generate
   const hasFlags = options.platform || options.platforms || options.teams ||
     (options.scopes && !(options.scopes.length === 1 && options.scopes[0] === 'all'));
 
-  if (!hasFlags) {
+  if (!hasFlags && process.stdin.isTTY) {
     const prompted = await promptGenerateOptions(config.teams, config.platforms);
     options = { ...options, ...prompted };
   }
