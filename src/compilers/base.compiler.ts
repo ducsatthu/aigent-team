@@ -1,4 +1,4 @@
-import { assembleReference, assembleSkill } from '../core/template-engine.js';
+import { assembleExample, assembleOutputContract, assembleReference, assembleSkill } from '../core/template-engine.js';
 import type { AgentDefinition, AigentTeamConfig, CompiledOutput, GenerateScope, Platform, PluginArtifactCategory, ValidationResult } from '../core/types.js';
 
 export abstract class BaseCompiler {
@@ -28,6 +28,8 @@ export abstract class BaseCompiler {
         normalized.add('agents');
         normalized.add('skills');
         normalized.add('references');
+        normalized.add('examples');
+        normalized.add('output-contracts');
       } else {
         normalized.add(s);
       }
@@ -44,6 +46,12 @@ export abstract class BaseCompiler {
     }
     if (normalized.has('references')) {
       outputs.push(...this.compileAllReferences(agents));
+    }
+    if (normalized.has('examples')) {
+      outputs.push(...this.compileAllExamples(agents));
+    }
+    if (normalized.has('output-contracts')) {
+      outputs.push(...this.compileAllOutputContracts(agents));
     }
 
     return outputs;
@@ -69,7 +77,7 @@ export abstract class BaseCompiler {
     rootDir: string,
   ): Partial<Record<PluginArtifactCategory, number>> {
     const counts: Partial<Record<PluginArtifactCategory, number>> = {};
-    const categories: PluginArtifactCategory[] = ['rules', 'skills', 'agents', 'kb', 'ai'];
+    const categories: PluginArtifactCategory[] = ['rules', 'skills', 'agents', 'kb', 'examples', 'contracts', 'ai'];
     for (const cat of categories) {
       const prefix = `${rootDir}/${cat}/`;
       const count = outputs.filter((o) => o.filePath.startsWith(prefix)).length;
@@ -97,6 +105,24 @@ export abstract class BaseCompiler {
   protected abstract compileAllReferences(
     agents: AgentDefinition[],
   ): CompiledOutput[];
+
+  /**
+   * Compile all example files. Default no-op — override in subclasses.
+   */
+  protected compileAllExamples(
+    _agents: AgentDefinition[],
+  ): CompiledOutput[] {
+    return [];
+  }
+
+  /**
+   * Compile all output contract files. Default no-op — override in subclasses.
+   */
+  protected compileAllOutputContracts(
+    _agents: AgentDefinition[],
+  ): CompiledOutput[] {
+    return [];
+  }
 
   // ---- Shared helpers ----
 
@@ -132,6 +158,40 @@ export abstract class BaseCompiler {
     return agent.skills.map((skill) => ({
       filePath: `${baseDir}/${skill.id}${extension}`,
       content: assembleSkill(skill) + '\n',
+      overwriteStrategy: 'replace' as const,
+    }));
+  }
+
+  /**
+   * Compile example files for an agent into a given directory.
+   */
+  protected compileExamples(
+    agent: AgentDefinition,
+    baseDir: string,
+    extension: string = '.md',
+  ): CompiledOutput[] {
+    if (!agent.examples?.length) return [];
+
+    return agent.examples.map((example) => ({
+      filePath: `${baseDir}/${example.id}${extension}`,
+      content: assembleExample(example) + '\n',
+      overwriteStrategy: 'replace' as const,
+    }));
+  }
+
+  /**
+   * Compile output contract files for an agent into a given directory.
+   */
+  protected compileOutputContracts(
+    agent: AgentDefinition,
+    baseDir: string,
+    extension: string = '.md',
+  ): CompiledOutput[] {
+    if (!agent.outputContracts?.length) return [];
+
+    return agent.outputContracts.map((contract) => ({
+      filePath: `${baseDir}/${contract.id}${extension}`,
+      content: assembleOutputContract(contract) + '\n',
       overwriteStrategy: 'replace' as const,
     }));
   }

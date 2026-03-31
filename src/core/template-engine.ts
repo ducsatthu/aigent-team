@@ -1,4 +1,4 @@
-import type { AgentDefinition, ReferenceFile, SkillFile } from './types.js';
+import type { AgentDefinition, ExampleFile, OutputContract, ReferenceFile, SkillFile } from './types.js';
 
 /**
  * Assemble the slim skill index for an agent (~150-200 lines).
@@ -38,6 +38,38 @@ export function assembleSkillIndex(agent: AgentDefinition): string {
         ...refLines,
       ].join('\n'));
     }
+  }
+
+  // Examples catalog table (if any examples exist)
+  if (agent.examples?.length) {
+    const exampleLines = agent.examples.map(
+      (e) => `| \`${e.id}\` | ${e.name} | ${e.skillRef || '—'} |`
+    );
+    parts.push([
+      '## Examples',
+      '',
+      'Load the relevant example file for few-shot guidance:',
+      '',
+      '| Example | Name | Skill Ref |',
+      '|---------|------|-----------|',
+      ...exampleLines,
+    ].join('\n'));
+  }
+
+  // Output contracts catalog table (if any contracts exist)
+  if (agent.outputContracts?.length) {
+    const contractLines = agent.outputContracts.map(
+      (c) => `| \`${c.id}\` | ${c.name} | ${c.format || '—'} |`
+    );
+    parts.push([
+      '## Output Contracts',
+      '',
+      'Validate your output against the relevant contract:',
+      '',
+      '| Contract | Name | Format |',
+      '|----------|------|--------|',
+      ...contractLines,
+    ].join('\n'));
   }
 
   // Skills catalog table (if any skills exist)
@@ -123,4 +155,18 @@ export function assembleReference(ref: ReferenceFile): string {
  */
 export function assembleSkill(skill: SkillFile): string {
   return skill.content;
+}
+
+/**
+ * Format a single example file for output.
+ */
+export function assembleExample(example: ExampleFile): string {
+  return example.content;
+}
+
+/**
+ * Format a single output contract file for output.
+ */
+export function assembleOutputContract(contract: OutputContract): string {
+  return contract.content;
 }

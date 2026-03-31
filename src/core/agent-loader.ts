@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 import matter from 'gray-matter';
 import { deepmerge } from 'deepmerge-ts';
-import type { AgentDefinition, AigentTeamConfig, ReferenceFile, SkillFile, TeamRole } from './types.js';
+import type { AgentDefinition, AigentTeamConfig, ExampleFile, OutputContract, ReferenceFile, SkillFile, TeamRole } from './types.js';
 
 // Resolve package root: works both in src/ (dev) and dist/ (built)
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -88,6 +88,47 @@ function loadSkills(skillsDir: string): SkillFile[] {
   return skills;
 }
 
+function loadExamples(examplesDir: string): ExampleFile[] {
+  if (!existsSync(examplesDir)) return [];
+
+  return readdirSync(examplesDir)
+    .filter((f) => f.endsWith('.md'))
+    .map((f) => {
+      const raw = readFileSync(resolve(examplesDir, f), 'utf-8').trim();
+      const { data, content } = parseFrontmatter(raw);
+      const id = f.replace('.md', '');
+      return {
+        id,
+        name: (data.name as string) || id.replace(/-/g, ' '),
+        description: (data.description as string) || '',
+        skillRef: (data.skillRef as string) || undefined,
+        content,
+        tags: (data.tags as string[]) || undefined,
+      };
+    });
+}
+
+function loadOutputContracts(contractsDir: string): OutputContract[] {
+  if (!existsSync(contractsDir)) return [];
+
+  return readdirSync(contractsDir)
+    .filter((f) => f.endsWith('.md'))
+    .map((f) => {
+      const raw = readFileSync(resolve(contractsDir, f), 'utf-8').trim();
+      const { data, content } = parseFrontmatter(raw);
+      const id = f.replace('.md', '');
+      return {
+        id,
+        name: (data.name as string) || id.replace(/-/g, ' '),
+        description: (data.description as string) || '',
+        skillRef: (data.skillRef as string) || undefined,
+        format: (data.format as string) || undefined,
+        content,
+        tags: (data.tags as string[]) || undefined,
+      };
+    });
+}
+
 function loadBuiltinAgent(role: TeamRole): AgentDefinition {
   const teamDir = resolve(TEMPLATES_DIR, 'teams', role);
   const agentYaml = readFileSync(resolve(teamDir, 'agent.yaml'), 'utf-8');
@@ -103,9 +144,11 @@ function loadBuiltinAgent(role: TeamRole): AgentDefinition {
   // New: load reference files
   const references = loadReferences(resolve(teamDir, 'references'));
 
-  // Load rules and skills
+  // Load rules, skills, examples, output contracts
   const rulesContent = readIfExists(resolve(teamDir, 'rules.md'));
   const skills = loadSkills(resolve(teamDir, 'skills'));
+  const examples = loadExamples(resolve(teamDir, 'examples'));
+  const outputContracts = loadOutputContracts(resolve(teamDir, 'output-contracts'));
 
   return {
     id: agentDef.id,
@@ -123,6 +166,8 @@ function loadBuiltinAgent(role: TeamRole): AgentDefinition {
     references,
     rulesContent,
     skills,
+    examples,
+    outputContracts,
     globs: agentDef.globs || [],
   };
 }
@@ -193,6 +238,18 @@ export function loadAgents(
       const localSkills = loadSkills(resolve(localDir, 'skills'));
       if (localSkills.length) {
         agent.skills = [...agent.skills, ...localSkills];
+      }
+
+      // Merge local examples
+      const localExamples = loadExamples(resolve(localDir, 'examples'));
+      if (localExamples.length) {
+        agent.examples = [...agent.examples, ...localExamples];
+      }
+
+      // Merge local output contracts
+      const localContracts = loadOutputContracts(resolve(localDir, 'output-contracts'));
+      if (localContracts.length) {
+        agent.outputContracts = [...agent.outputContracts, ...localContracts];
       }
     }
 

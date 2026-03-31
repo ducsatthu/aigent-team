@@ -1,5 +1,5 @@
 import { BaseCompiler } from './base.compiler.js';
-import { assembleReference, assembleSkill, assembleSkillIndex } from '../core/template-engine.js';
+import { assembleExample, assembleOutputContract, assembleReference, assembleSkill, assembleSkillIndex } from '../core/template-engine.js';
 import type { AgentDefinition, AigentTeamConfig, CompiledOutput, Platform, ValidationResult } from '../core/types.js';
 
 export class CodexCompiler extends BaseCompiler {
@@ -81,6 +81,28 @@ export class CodexCompiler extends BaseCompiler {
     return outputs;
   }
 
+  protected compileAllExamples(agents: AgentDefinition[]): CompiledOutput[] {
+    const outputs: CompiledOutput[] = [];
+    for (const agent of agents) {
+      outputs.push(...this.compileExamples(
+        agent,
+        `.codex/agents/${agent.id}-agent/examples`,
+      ));
+    }
+    return outputs;
+  }
+
+  protected compileAllOutputContracts(agents: AgentDefinition[]): CompiledOutput[] {
+    const outputs: CompiledOutput[] = [];
+    for (const agent of agents) {
+      outputs.push(...this.compileOutputContracts(
+        agent,
+        `.codex/agents/${agent.id}-agent/contracts`,
+      ));
+    }
+    return outputs;
+  }
+
   compilePluginBundle(
     agents: AgentDefinition[],
     _config: AigentTeamConfig,
@@ -145,6 +167,30 @@ export class CodexCompiler extends BaseCompiler {
         outputs.push({
           filePath: `${rootDir}/kb/${agent.id}/${ref.id}.md`,
           content: assembleReference(ref) + '\n',
+          overwriteStrategy: 'replace',
+        });
+      }
+    }
+
+    // examples/ → example files organized by agent
+    for (const agent of agents) {
+      if (!agent.examples?.length) continue;
+      for (const example of agent.examples) {
+        outputs.push({
+          filePath: `${rootDir}/examples/${agent.id}/${example.id}.md`,
+          content: assembleExample(example) + '\n',
+          overwriteStrategy: 'replace',
+        });
+      }
+    }
+
+    // contracts/ → output contract files organized by agent
+    for (const agent of agents) {
+      if (!agent.outputContracts?.length) continue;
+      for (const contract of agent.outputContracts) {
+        outputs.push({
+          filePath: `${rootDir}/contracts/${agent.id}/${contract.id}.md`,
+          content: assembleOutputContract(contract) + '\n',
           overwriteStrategy: 'replace',
         });
       }

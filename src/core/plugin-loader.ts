@@ -1,6 +1,6 @@
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { resolve, basename } from 'node:path';
-import type { AgentDefinition, PluginManifest, ReferenceFile, SkillFile } from './types.js';
+import type { AgentDefinition, ExampleFile, OutputContract, PluginManifest, ReferenceFile, SkillFile } from './types.js';
 import { parseFrontmatter } from './agent-loader.js';
 
 export interface LoadedPlugin {
@@ -43,6 +43,12 @@ export function loadPlugin(pluginPath: string): LoadedPlugin {
     // Read reference files for this agent
     const references = loadReferenceFiles(resolve(bundleDir, 'kb', meta.id));
 
+    // Read example files for this agent
+    const examples = loadExampleFiles(resolve(bundleDir, 'examples', meta.id));
+
+    // Read output contract files for this agent
+    const outputContracts = loadOutputContractFiles(resolve(bundleDir, 'contracts', meta.id));
+
     // Read shared knowledge
     const sharedKnowledge = loadSharedKnowledge(resolve(bundleDir, 'kb', 'shared'));
 
@@ -60,6 +66,8 @@ export function loadPlugin(pluginPath: string): LoadedPlugin {
       rulesContent: '',
       skills,
       references,
+      examples,
+      outputContracts,
       sharedKnowledge,
       // Unused during install — compilers only need the fields above
       systemPrompt: '',
@@ -126,6 +134,47 @@ function loadReferenceFiles(dir: string): ReferenceFile[] {
         title: (data.title as string) || id.replace(/-/g, ' '),
         description: (data.description as string) || '',
         whenToRead: (data.whenToRead as string) || '',
+        content,
+        tags: (data.tags as string[]) || undefined,
+      };
+    });
+}
+
+function loadExampleFiles(dir: string): ExampleFile[] {
+  if (!existsSync(dir)) return [];
+
+  return readdirSync(dir)
+    .filter((f) => f.endsWith('.md'))
+    .map((f) => {
+      const id = basename(f, '.md');
+      const raw = readFileSync(resolve(dir, f), 'utf-8').trim();
+      const { data, content } = parseFrontmatter(raw);
+      return {
+        id,
+        name: (data.name as string) || id.replace(/-/g, ' '),
+        description: (data.description as string) || '',
+        skillRef: (data.skillRef as string) || undefined,
+        content,
+        tags: (data.tags as string[]) || undefined,
+      };
+    });
+}
+
+function loadOutputContractFiles(dir: string): OutputContract[] {
+  if (!existsSync(dir)) return [];
+
+  return readdirSync(dir)
+    .filter((f) => f.endsWith('.md'))
+    .map((f) => {
+      const id = basename(f, '.md');
+      const raw = readFileSync(resolve(dir, f), 'utf-8').trim();
+      const { data, content } = parseFrontmatter(raw);
+      return {
+        id,
+        name: (data.name as string) || id.replace(/-/g, ' '),
+        description: (data.description as string) || '',
+        skillRef: (data.skillRef as string) || undefined,
+        format: (data.format as string) || undefined,
         content,
         tags: (data.tags as string[]) || undefined,
       };

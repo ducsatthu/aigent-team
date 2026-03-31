@@ -1,5 +1,5 @@
 import { BaseCompiler } from './base.compiler.js';
-import { assembleReference, assembleSkill, assembleSkillIndex } from '../core/template-engine.js';
+import { assembleExample, assembleOutputContract, assembleReference, assembleSkill, assembleSkillIndex } from '../core/template-engine.js';
 import { toKebabCursorPluginId } from './cursor-ide-plugin.compiler.js';
 import type { AgentDefinition, AigentTeamConfig, CompiledOutput, Platform, ValidationResult } from '../core/types.js';
 
@@ -108,6 +108,30 @@ export class CursorCompiler extends BaseCompiler {
     return outputs;
   }
 
+  protected compileAllExamples(agents: AgentDefinition[]): CompiledOutput[] {
+    const outputs: CompiledOutput[] = [];
+    for (const agent of agents) {
+      outputs.push(...this.compileExamples(
+        agent,
+        `.cursor/rules/${agent.id}-examples`,
+        '.mdc',
+      ));
+    }
+    return outputs;
+  }
+
+  protected compileAllOutputContracts(agents: AgentDefinition[]): CompiledOutput[] {
+    const outputs: CompiledOutput[] = [];
+    for (const agent of agents) {
+      outputs.push(...this.compileOutputContracts(
+        agent,
+        `.cursor/rules/${agent.id}-contracts`,
+        '.mdc',
+      ));
+    }
+    return outputs;
+  }
+
   compilePluginBundle(
     agents: AgentDefinition[],
     config: AigentTeamConfig,
@@ -201,6 +225,42 @@ export class CursorCompiler extends BaseCompiler {
         outputs.push({
           filePath: `${rootDir}/kb/${agent.id}-refs/${ref.id}.mdc`,
           content: `${refFrontmatter}\n\n${assembleReference(ref)}\n`,
+          overwriteStrategy: 'replace',
+        });
+      }
+    }
+
+    // examples/ → example files organized by agent
+    for (const agent of agents) {
+      if (!agent.examples?.length) continue;
+      const globs = agent.globs?.length ? agent.globs.join(', ') : undefined;
+      for (const example of agent.examples) {
+        const exFrontmatter = this.formatFrontmatter({
+          description: `${agent.name} example: ${example.name}`,
+          alwaysApply: false,
+          globs: globs || undefined,
+        });
+        outputs.push({
+          filePath: `${rootDir}/examples/${agent.id}/${example.id}.mdc`,
+          content: `${exFrontmatter}\n\n${assembleExample(example)}\n`,
+          overwriteStrategy: 'replace',
+        });
+      }
+    }
+
+    // contracts/ → output contract files organized by agent
+    for (const agent of agents) {
+      if (!agent.outputContracts?.length) continue;
+      const globs = agent.globs?.length ? agent.globs.join(', ') : undefined;
+      for (const contract of agent.outputContracts) {
+        const cFrontmatter = this.formatFrontmatter({
+          description: `${agent.name} contract: ${contract.name}`,
+          alwaysApply: false,
+          globs: globs || undefined,
+        });
+        outputs.push({
+          filePath: `${rootDir}/contracts/${agent.id}/${contract.id}.mdc`,
+          content: `${cFrontmatter}\n\n${assembleOutputContract(contract)}\n`,
           overwriteStrategy: 'replace',
         });
       }

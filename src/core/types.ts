@@ -8,10 +8,10 @@ export type Platform = (typeof PLATFORMS)[number];
 export const TEAM_ROLES = ['lead', 'ba', 'fe', 'be', 'qa', 'devops'] as const;
 export type TeamRole = (typeof TEAM_ROLES)[number];
 
-export const GENERATE_SCOPES = ['all', 'agents', 'skills', 'references', 'plugin'] as const;
+export const GENERATE_SCOPES = ['all', 'agents', 'skills', 'references', 'examples', 'output-contracts', 'plugin'] as const;
 export type GenerateScope = (typeof GENERATE_SCOPES)[number];
 
-export const PLUGIN_ARTIFACT_CATEGORIES = ['rules', 'skills', 'agents', 'kb', 'ai'] as const;
+export const PLUGIN_ARTIFACT_CATEGORIES = ['rules', 'skills', 'agents', 'kb', 'examples', 'contracts', 'ai'] as const;
 export type PluginArtifactCategory = (typeof PLUGIN_ARTIFACT_CATEGORIES)[number];
 
 export const PLUGIN_BUNDLE_DIRS: Record<Platform, string> = {
@@ -51,6 +51,29 @@ export interface SkillFile {
   tags?: string[];
 }
 
+// ---- Example File (L4 — few-shot examples for AI output quality) ----
+
+export interface ExampleFile {
+  id: string;
+  name: string;
+  description: string;
+  skillRef?: string;
+  content: string;
+  tags?: string[];
+}
+
+// ---- Output Contract (L7 — output standards, rubric, self-check) ----
+
+export interface OutputContract {
+  id: string;
+  name: string;
+  description: string;
+  skillRef?: string;
+  format?: string;
+  content: string;
+  tags?: string[];
+}
+
 // ---- Agent Definition (Single Source of Truth) ----
 
 export interface TechStackConfig {
@@ -87,6 +110,8 @@ export interface AgentDefinition {
   references: ReferenceFile[];
   rulesContent: string;
   skills: SkillFile[];
+  examples: ExampleFile[];
+  outputContracts: OutputContract[];
   globs?: string[];
 }
 
@@ -176,7 +201,10 @@ export interface PluginManifest {
     agents: number;
     skills: number;
     references: number;
+    examples: number;
+    outputContracts: number;
   };
+  formatVersion?: number;
   bundles?: PluginPlatformBundle[];
 }
 
