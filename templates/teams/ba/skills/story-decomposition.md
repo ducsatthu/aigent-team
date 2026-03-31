@@ -1,3 +1,14 @@
+---
+name: Story Decomposition
+description: Break epics into implementable user stories using vertical slicing and INVEST criteria
+trigger: When breaking an epic or large feature into implementable user stories.
+useCases:
+  - BA Agent decomposing epics for sprint planning
+  - Lead Agent requesting story breakdown for a feature
+  - BA Agent preparing a backlog refinement session with the team
+tags: [ba, planning, user-stories, decomposition]
+---
+
 # Skill: Story Decomposition
 
 **Trigger**: When breaking an epic or large feature into implementable user stories.

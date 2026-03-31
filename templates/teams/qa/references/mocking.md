@@ -1,3 +1,10 @@
+---
+title: Mocking
+description: Guidelines for mocking at system boundaries only, using MSW for HTTP mocks, and verifying mock-to-production contract fidelity.
+whenToRead: When deciding what to mock, setting up MSW handlers, or reviewing tests that use mocks.
+tags: [qa, mocking, msw, test-doubles]
+---
+
 # Mocking Reference
 
 ## Core Rule: Mock at System Boundaries Only

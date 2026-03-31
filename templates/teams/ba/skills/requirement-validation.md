@@ -1,3 +1,14 @@
+---
+name: Requirement Validation
+description: Validate that requirements are complete, consistent, feasible, and testable before development begins
+trigger: When validating that requirements are complete, consistent, and implementable before development starts.
+useCases:
+  - BA Agent reviewing a new feature spec before handing off to engineering
+  - Lead Agent gating a sprint to ensure all stories meet quality criteria
+  - QA Agent verifying that acceptance criteria are testable and unambiguous
+tags: [ba, requirements, validation, quality]
+---
+
 # Skill: Requirement Validation
 
 **Trigger**: When validating that requirements are complete, consistent, and implementable before development starts.

@@ -1,3 +1,10 @@
+---
+title: Frontend Review Checklist
+description: PR review checklist covering component design, rendering, accessibility, security, and testing standards.
+whenToRead: When reviewing pull requests that include frontend component or UI changes
+tags: [frontend, review, checklist, quality]
+---
+
 # Frontend Review Checklist
 
 ### Component Design

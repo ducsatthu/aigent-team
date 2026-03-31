@@ -1,3 +1,14 @@
+---
+name: Diagnose Flaky Test
+description: Identify and fix the root cause of intermittently failing tests
+trigger: When a test is intermittently failing in CI or locally, passing on retry but failing inconsistently.
+useCases:
+  - QA Agent investigating a test that fails randomly in CI pipelines
+  - FE Agent debugging a component test that passes locally but fails in CI
+  - Lead Agent triaging a flaky test blocking a release
+tags: [qa, testing, flaky-tests, debugging, ci]
+---
+
 # Skill: Diagnose Flaky Test
 
 **Trigger**: When a test is intermittently failing in CI or locally, passing on retry but failing inconsistently.

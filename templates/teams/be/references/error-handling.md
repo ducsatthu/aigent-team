@@ -1,3 +1,10 @@
+---
+title: Error Handling & Resilience
+description: Patterns for domain error hierarchies, HTTP status mapping, and building resilient backend services.
+whenToRead: When implementing error handling, retry logic, or resilience patterns
+tags: [be, error-handling, resilience, reliability]
+---
+
 # Error Handling & Resilience
 
 ## Domain Error Hierarchy

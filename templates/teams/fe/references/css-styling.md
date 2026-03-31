@@ -1,3 +1,10 @@
+---
+title: CSS and Styling
+description: Tailwind conventions, design token usage, responsive patterns, and styling best practices.
+whenToRead: When writing or reviewing styles, Tailwind usage, or responsive layouts
+tags: [frontend, css, tailwind, styling]
+---
+
 # CSS & Styling
 
 ## Tailwind Conventions

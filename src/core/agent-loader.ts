@@ -2,6 +2,7 @@ import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { resolve, dirname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse as parseYaml } from 'yaml';
+import matter from 'gray-matter';
 import { deepmerge } from 'deepmerge-ts';
 import type { AgentDefinition, AigentTeamConfig, ReferenceFile, SkillFile, TeamRole } from './types.js';
 
@@ -16,6 +17,14 @@ function readIfExists(path: string): string {
   return existsSync(path) ? readFileSync(path, 'utf-8').trim() : '';
 }
 
+export function parseFrontmatter(raw: string): { data: Record<string, unknown>; content: string } {
+  if (!raw.trimStart().startsWith('---')) {
+    return { data: {}, content: raw };
+  }
+  const { data, content } = matter(raw);
+  return { data: data as Record<string, unknown>, content: content.trim() };
+}
+
 function loadReferences(refsDir: string): ReferenceFile[] {
   if (!existsSync(refsDir)) return [];
   const refs: ReferenceFile[] = [];
@@ -23,29 +32,32 @@ function loadReferences(refsDir: string): ReferenceFile[] {
   const files = readdirSync(refsDir, { withFileTypes: true });
   for (const file of files) {
     if (file.isDirectory()) {
-      // Load nested directories (e.g., references/workflows/)
       const subDir = resolve(refsDir, file.name);
       const subFiles = readdirSync(subDir).filter((f) => f.endsWith('.md'));
       for (const subFile of subFiles) {
-        const content = readFileSync(resolve(subDir, subFile), 'utf-8').trim();
+        const raw = readFileSync(resolve(subDir, subFile), 'utf-8').trim();
+        const { data, content } = parseFrontmatter(raw);
         const id = `${file.name}/${subFile.replace('.md', '')}`;
         refs.push({
           id,
-          title: subFile.replace('.md', '').replace(/-/g, ' '),
-          description: '',
-          whenToRead: '',
+          title: (data.title as string) || subFile.replace('.md', '').replace(/-/g, ' '),
+          description: (data.description as string) || '',
+          whenToRead: (data.whenToRead as string) || '',
           content,
+          tags: (data.tags as string[]) || undefined,
         });
       }
     } else if (file.name.endsWith('.md')) {
-      const content = readFileSync(resolve(refsDir, file.name), 'utf-8').trim();
+      const raw = readFileSync(resolve(refsDir, file.name), 'utf-8').trim();
+      const { data, content } = parseFrontmatter(raw);
       const id = file.name.replace('.md', '');
       refs.push({
         id,
-        title: id.replace(/-/g, ' '),
-        description: '',
-        whenToRead: '',
+        title: (data.title as string) || id.replace(/-/g, ' '),
+        description: (data.description as string) || '',
+        whenToRead: (data.whenToRead as string) || '',
         content,
+        tags: (data.tags as string[]) || undefined,
       });
     }
   }
@@ -59,14 +71,17 @@ function loadSkills(skillsDir: string): SkillFile[] {
 
   const files = readdirSync(skillsDir).filter((f) => f.endsWith('.md'));
   for (const file of files) {
-    const content = readFileSync(resolve(skillsDir, file), 'utf-8').trim();
+    const raw = readFileSync(resolve(skillsDir, file), 'utf-8').trim();
+    const { data, content } = parseFrontmatter(raw);
     const id = file.replace('.md', '');
     skills.push({
       id,
-      name: id.replace(/-/g, ' '),
-      description: '',
-      trigger: '',
+      name: (data.name as string) || id.replace(/-/g, ' '),
+      description: (data.description as string) || '',
+      trigger: (data.trigger as string) || '',
       content,
+      useCases: (data.useCases as string[]) || undefined,
+      tags: (data.tags as string[]) || undefined,
     });
   }
 

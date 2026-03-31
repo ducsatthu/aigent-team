@@ -1,3 +1,10 @@
+---
+title: Monitoring and Observability
+description: Metrics, logs, and traces instrumentation with golden signal alerting and runbook standards.
+whenToRead: When setting up monitoring, defining alerts, or instrumenting services
+tags: [devops, monitoring, observability, alerting]
+---
+
 # Monitoring and Observability Reference
 
 ## Three Pillars

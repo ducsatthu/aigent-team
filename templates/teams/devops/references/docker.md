@@ -1,3 +1,10 @@
+---
+title: Docker Best Practices
+description: Base image selection, multi-stage builds, layer optimization, and container security hardening.
+whenToRead: When writing or reviewing Dockerfiles and container configurations
+tags: [devops, docker, containers, images]
+---
+
 # Docker Reference
 
 ## Base Image Selection

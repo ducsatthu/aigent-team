@@ -1,3 +1,10 @@
+---
+title: Caching
+description: Cache strategy selection, key design patterns, and invalidation approaches for backend services.
+whenToRead: When adding or reviewing caching layers for performance optimization
+tags: [be, caching, performance, redis]
+---
+
 # Caching
 
 ## Strategy Selection

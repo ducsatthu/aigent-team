@@ -1,3 +1,10 @@
+---
+title: State Management
+description: Decision tree for choosing state solutions, server state with React Query, and client state with Zustand/Jotai.
+whenToRead: When deciding on state management approach or reviewing state-related code
+tags: [frontend, state, react-query, zustand]
+---
+
 # State Management
 
 ## Decision Tree

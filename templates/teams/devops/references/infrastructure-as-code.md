@@ -1,3 +1,10 @@
+---
+title: Infrastructure as Code
+description: Terraform directory structure, state management, module design, and resource tagging standards.
+whenToRead: When writing or reviewing Terraform/IaC configurations and modules
+tags: [devops, terraform, iac, modules]
+---
+
 # Infrastructure as Code Reference
 
 ## Terraform Directory Structure

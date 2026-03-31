@@ -1,3 +1,14 @@
+---
+name: Component Audit
+description: Audit component library health by finding duplicates, dead code, and quality gaps
+trigger: When reviewing component library health, finding duplicates, or preparing for a design system migration.
+useCases:
+  - FE Agent cleaning up components before a design system migration
+  - Lead Agent assessing codebase health during sprint planning
+  - FE Agent identifying unused components for removal
+tags: [fe, components, design-system, code-quality]
+---
+
 # Skill: Component Audit
 
 **Trigger**: When reviewing component library health, finding duplicates, or preparing for a design system migration.

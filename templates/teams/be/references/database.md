@@ -1,3 +1,10 @@
+---
+title: Database
+description: Schema standards, indexing rules, query optimization, and migration best practices for relational databases.
+whenToRead: When designing schemas, writing migrations, or optimizing database queries
+tags: [be, database, schema, indexing]
+---
+
 # Database
 
 ## Schema Standards

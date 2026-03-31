@@ -1,3 +1,14 @@
+---
+name: Rollback Procedure
+description: Revert a deployment due to errors, performance regression, or unexpected behavior in production
+trigger: When a deployment needs to be reverted due to errors, performance regression, or unexpected behavior in production.
+useCases:
+  - DevOps Agent reverting a broken deployment in production
+  - Lead Agent coordinating an emergency rollback during an incident
+  - DevOps Agent executing a planned rollback after failed canary analysis
+tags: [devops, rollback, deployment, incident-response]
+---
+
 # Skill: Rollback Procedure
 
 **Trigger**: When a deployment needs to be reverted due to errors, performance regression, or unexpected behavior in production.

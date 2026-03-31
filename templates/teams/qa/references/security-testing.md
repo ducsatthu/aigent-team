@@ -1,3 +1,10 @@
+---
+title: Security Testing
+description: OWASP Top 10 test coverage patterns, injection payload examples, and automated DAST scanning guidance.
+whenToRead: When performing a security audit, writing injection tests, or setting up ZAP scans.
+tags: [qa, security, owasp, dast]
+---
+
 # Security Testing Reference
 
 ## OWASP Top 10 — Test Coverage

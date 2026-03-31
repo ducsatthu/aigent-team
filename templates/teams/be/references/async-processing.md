@@ -1,3 +1,10 @@
+---
+title: Async Processing
+description: Guidelines for queue-based job design, idempotency, and handling long-running background tasks.
+whenToRead: When implementing background jobs, message queues, or asynchronous workflows
+tags: [be, async, queues, jobs]
+---
+
 # Async Processing
 
 ## When to Use Queues

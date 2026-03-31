@@ -1,3 +1,10 @@
+---
+title: API Contract Design
+description: Guidelines for defining API contracts between frontend and backend before implementation begins.
+whenToRead: When designing or reviewing API contracts for FE/BE alignment
+tags: [ba, api-contract, integration, specification]
+---
+
 # API Contract Design
 
 ## Purpose

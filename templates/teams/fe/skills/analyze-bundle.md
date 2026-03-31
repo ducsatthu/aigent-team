@@ -1,3 +1,14 @@
+---
+name: Analyze Bundle Size
+description: Analyze JavaScript bundle size and identify optimization opportunities
+trigger: When adding new dependencies, investigating slow page loads, or performing a performance audit.
+useCases:
+  - FE Agent performing dependency audit before a release
+  - Lead Agent requesting a performance review after adding new features
+  - FE Agent investigating slow page load times reported by QA
+tags: [fe, performance, bundle, dependencies]
+---
+
 # Skill: Analyze Bundle Size
 
 **Trigger**: When adding new dependencies, investigating slow page loads, or performing a performance audit.

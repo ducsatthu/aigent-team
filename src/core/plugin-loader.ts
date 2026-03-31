@@ -1,6 +1,7 @@
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { resolve, basename } from 'node:path';
 import type { AgentDefinition, PluginManifest, ReferenceFile, SkillFile } from './types.js';
+import { parseFrontmatter } from './agent-loader.js';
 
 export interface LoadedPlugin {
   manifest: PluginManifest;
@@ -97,13 +98,16 @@ function loadSkillFiles(dir: string): SkillFile[] {
     .filter((f) => f.endsWith('.md'))
     .map((f) => {
       const id = basename(f, '.md');
-      const content = readFileSync(resolve(dir, f), 'utf-8').trim();
+      const raw = readFileSync(resolve(dir, f), 'utf-8').trim();
+      const { data, content } = parseFrontmatter(raw);
       return {
         id,
-        name: id.replace(/-/g, ' '),
-        description: '',
-        trigger: '',
+        name: (data.name as string) || id.replace(/-/g, ' '),
+        description: (data.description as string) || '',
+        trigger: (data.trigger as string) || '',
         content,
+        useCases: (data.useCases as string[]) || undefined,
+        tags: (data.tags as string[]) || undefined,
       };
     });
 }
@@ -115,13 +119,15 @@ function loadReferenceFiles(dir: string): ReferenceFile[] {
     .filter((f) => f.endsWith('.md'))
     .map((f) => {
       const id = basename(f, '.md');
-      const content = readFileSync(resolve(dir, f), 'utf-8').trim();
+      const raw = readFileSync(resolve(dir, f), 'utf-8').trim();
+      const { data, content } = parseFrontmatter(raw);
       return {
         id,
-        title: id.replace(/-/g, ' '),
-        description: '',
-        whenToRead: '',
+        title: (data.title as string) || id.replace(/-/g, ' '),
+        description: (data.description as string) || '',
+        whenToRead: (data.whenToRead as string) || '',
         content,
+        tags: (data.tags as string[]) || undefined,
       };
     });
 }

@@ -1,3 +1,10 @@
+---
+title: Authentication & Security
+description: Standards for JWT authentication, authorization, password storage, and common security hardening practices.
+whenToRead: When implementing authentication, authorization, or reviewing security concerns
+tags: [be, security, authentication, authorization]
+---
+
 # Authentication & Security
 
 ## Authentication

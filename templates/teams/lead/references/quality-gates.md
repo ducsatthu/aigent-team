@@ -1,3 +1,10 @@
+---
+title: Quality Gates
+description: Definition of done checklists and feature completeness criteria for validating subtask and release readiness.
+whenToRead: When reviewing whether a subtask or feature meets completion criteria before sign-off.
+tags: [lead, quality, definition-of-done, checklist]
+---
+
 # Quality Gates
 
 ## Definition of Done (per subtask)

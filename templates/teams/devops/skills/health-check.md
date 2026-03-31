@@ -1,3 +1,14 @@
+---
+name: Health Check Verification
+description: Verify service health after deployment by checking endpoints, dependencies, resources, and critical paths
+trigger: When verifying service health after deployment, setting up monitoring, or debugging availability issues.
+useCases:
+  - DevOps Agent running post-deployment verification checks
+  - QA Agent confirming service readiness before running E2E tests
+  - DevOps Agent triaging an availability alert in production
+tags: [devops, monitoring, health-check, deployment]
+---
+
 # Skill: Health Check Verification
 
 **Trigger**: When verifying service health after deployment, setting up monitoring, or debugging availability issues.

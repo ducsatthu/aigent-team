@@ -1,3 +1,10 @@
+---
+title: Backend Review Checklist
+description: Comprehensive checklist covering API contracts, data layer, security, and performance for backend code reviews.
+whenToRead: When reviewing backend pull requests or performing pre-merge quality checks
+tags: [be, code-review, checklist, quality]
+---
+
 # Backend Review Checklist
 
 ### API Contract

@@ -1,3 +1,10 @@
+---
+title: API Design
+description: Standards for RESTful URL structure, HTTP status codes, and API endpoint conventions.
+whenToRead: When designing or implementing REST API endpoints
+tags: [be, api, rest, http]
+---
+
 # API Design
 
 ## RESTful URL Structure

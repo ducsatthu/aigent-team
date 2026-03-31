@@ -1,3 +1,10 @@
+---
+title: Cost Optimization
+description: Right-sizing strategies, reserved capacity planning, storage lifecycle policies, and budget alerting.
+whenToRead: When reviewing cloud spend, right-sizing resources, or setting up cost controls
+tags: [devops, cost, cloud, optimization]
+---
+
 # Cost Optimization Reference
 
 ## Right-Sizing

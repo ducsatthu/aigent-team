@@ -1,3 +1,10 @@
+---
+title: DevOps Review Checklist
+description: Comprehensive PR review checklist covering IaC, Docker, Kubernetes, CI/CD, security, and monitoring changes.
+whenToRead: When reviewing pull requests that include infrastructure or deployment changes
+tags: [devops, review, checklist, quality]
+---
+
 # DevOps Review Checklist
 
 Use this checklist when reviewing infrastructure, deployment, and platform

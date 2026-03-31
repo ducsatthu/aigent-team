@@ -1,3 +1,10 @@
+---
+title: Cross-Team Coordination
+description: Patterns for managing API contract alignment, shared specs, and dependency resolution across frontend, backend, and other agent teams.
+whenToRead: When orchestrating multi-team tasks or resolving cross-team dependencies and contract mismatches.
+tags: [lead, coordination, contracts, cross-team]
+---
+
 # Cross-Team Coordination
 
 ## API Contract Alignment (FE ↔ BE)

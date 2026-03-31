@@ -1,3 +1,10 @@
+---
+title: Test Data
+description: Factory pattern examples and strategies for generating self-contained, isolated test data with sensible defaults.
+whenToRead: When building test factories, seeding databases, or solving test data isolation problems.
+tags: [qa, test-data, factories, fixtures]
+---
+
 # Test Data Reference
 
 ## Factory Pattern

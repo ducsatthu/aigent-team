@@ -1,3 +1,10 @@
+---
+title: CI Integration
+description: Pipeline stage design, time budgets, test reporting, and failure response strategies for continuous integration.
+whenToRead: When configuring CI pipeline test stages or troubleshooting test reporting and pipeline performance.
+tags: [qa, ci, pipeline, reporting]
+---
+
 # CI Integration Reference
 
 ## Pipeline Stages

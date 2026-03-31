@@ -1,3 +1,10 @@
+---
+title: E2E Testing
+description: Page Object Model patterns, selector strategies, and flakiness prevention techniques for end-to-end tests.
+whenToRead: When writing or reviewing Playwright/Cypress E2E tests or debugging flaky end-to-end failures.
+tags: [qa, e2e, playwright, page-object-model]
+---
+
 # E2E Testing Reference
 
 ## Page Object Model

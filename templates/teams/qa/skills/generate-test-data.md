@@ -1,3 +1,14 @@
+---
+name: Generate Test Data
+description: Create factory functions, edge case data sets, and seed scripts for testing
+trigger: When setting up test fixtures, creating seed data for E2E tests, or testing edge cases and boundary conditions.
+useCases:
+  - QA Agent building test fixtures for a new feature's E2E test suite
+  - BE Agent creating seed data for integration tests with complex entity relationships
+  - QA Agent generating boundary-value data sets for input validation testing
+tags: [qa, testing, test-data, fixtures, e2e]
+---
+
 # Skill: Generate Test Data
 
 **Trigger**: When setting up test fixtures, creating seed data for E2E tests, or testing edge cases and boundary conditions.

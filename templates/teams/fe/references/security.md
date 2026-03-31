@@ -1,3 +1,10 @@
+---
+title: Frontend Security
+description: XSS prevention, content sanitization, CSP headers, auth token handling, and client-side security patterns.
+whenToRead: When implementing or reviewing security-sensitive frontend code
+tags: [frontend, security, xss, authentication]
+---
+
 # Frontend Security
 
 ## XSS Prevention

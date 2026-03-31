@@ -1,3 +1,14 @@
+---
+name: Parallel Agent Orchestration
+description: Coordinate multiple specialist agents working simultaneously on a shared feature
+trigger: When implementing a feature that requires multiple specialist agents working simultaneously.
+useCases:
+  - Lead Agent coordinating FE and BE agents building a new feature in parallel
+  - Lead Agent managing a cross-team effort with shared API contracts
+  - Lead Agent orchestrating BA, FE, BE, and QA agents for a full-stack deliverable
+tags: [lead, orchestration, coordination, parallel]
+---
+
 # Skill: Parallel Agent Orchestration
 
 **Trigger**: When implementing a feature that requires multiple specialist agents working simultaneously.

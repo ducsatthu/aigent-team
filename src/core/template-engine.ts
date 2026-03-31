@@ -21,18 +21,40 @@ export function assembleSkillIndex(agent: AgentDefinition): string {
     parts.push(assembleAgentMarkdown(agent));
   }
 
+  // Reference catalog table (if any references have whenToRead metadata)
+  if (agent.references?.length) {
+    const refsWithMeta = agent.references.filter((r) => r.whenToRead);
+    if (refsWithMeta.length) {
+      const refLines = refsWithMeta.map(
+        (r) => `| \`${r.id}\` | ${r.title} | ${r.whenToRead} |`
+      );
+      parts.push([
+        '## Reference Files',
+        '',
+        'Load the relevant reference file when you need deep knowledge:',
+        '',
+        '| Reference | Title | When to read |',
+        '|-----------|-------|-------------|',
+        ...refLines,
+      ].join('\n'));
+    }
+  }
+
   // Skills catalog table (if any skills exist)
   if (agent.skills?.length) {
-    const skillLines = agent.skills.map(
-      (s) => `| \`${s.id}\` | ${s.name} |`
-    );
+    const hasTriggers = agent.skills.some((s) => s.trigger);
+    const skillLines = hasTriggers
+      ? agent.skills.map((s) => `| \`${s.id}\` | ${s.name} | ${s.trigger || '—'} |`)
+      : agent.skills.map((s) => `| \`${s.id}\` | ${s.name} |`);
+    const header = hasTriggers
+      ? ['| Skill | Name | Trigger |', '|-------|------|---------|']
+      : ['| Skill | Name |', '|-------|------|'];
     parts.push([
       '## Executable Skills',
       '',
       'Load the relevant skill file when performing these procedures:',
       '',
-      '| Skill | Name |',
-      '|-------|------|',
+      ...header,
       ...skillLines,
     ].join('\n'));
   }

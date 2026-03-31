@@ -1,3 +1,10 @@
+---
+title: Performance Testing
+description: Load scenario types, k6 script templates, and threshold definitions for smoke, load, stress, soak, and spike tests.
+whenToRead: When writing k6 performance scripts, defining load scenarios, or setting SLO-based thresholds.
+tags: [qa, performance, k6, load-testing]
+---
+
 # Performance Testing Reference
 
 ## Load Scenario Types

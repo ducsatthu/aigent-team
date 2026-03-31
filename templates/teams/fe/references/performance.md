@@ -1,3 +1,10 @@
+---
+title: Frontend Performance
+description: Core Web Vitals targets, bundle analysis, render profiling, and lazy loading strategies.
+whenToRead: When optimizing page load speed, bundle size, or runtime rendering performance
+tags: [frontend, performance, web-vitals, optimization]
+---
+
 # Frontend Performance
 
 ## Core Web Vitals Targets

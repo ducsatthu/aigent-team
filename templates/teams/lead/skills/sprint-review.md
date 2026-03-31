@@ -1,3 +1,14 @@
+---
+name: Sprint Review
+description: Review completed sprint work for quality, completeness, and cross-team alignment
+trigger: When reviewing completed work at the end of a sprint or milestone, assessing quality and completeness.
+useCases:
+  - Lead Agent running end-of-sprint quality assessment across all teams
+  - Lead Agent preparing a sprint summary for stakeholders
+  - Lead Agent identifying carried-over work and technical debt for backlog grooming
+tags: [lead, sprint, review, quality, planning]
+---
+
 # Skill: Sprint Review
 
 **Trigger**: When reviewing completed work at the end of a sprint or milestone, assessing quality and completeness.

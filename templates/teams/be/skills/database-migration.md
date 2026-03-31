@@ -1,3 +1,14 @@
+---
+name: Database Migration
+description: Safely execute schema changes including new tables, column modifications, index additions, and data migrations
+trigger: When schema changes are needed — new tables, column changes, index additions, or data migrations.
+useCases:
+  - BE Agent adding a new table or column for a feature
+  - Lead Agent reviewing a migration plan for a large-table schema change
+  - DevOps Agent coordinating a zero-downtime migration in production
+tags: [be, database, migration, schema]
+---
+
 # Skill: Database Migration
 
 **Trigger**: When schema changes are needed — new tables, column changes, index additions, or data migrations.

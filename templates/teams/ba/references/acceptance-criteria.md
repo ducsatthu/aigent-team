@@ -1,3 +1,10 @@
+---
+title: Writing Acceptance Criteria
+description: Patterns and frameworks for writing testable, unambiguous acceptance criteria in Given/When/Then format.
+whenToRead: When writing or reviewing acceptance criteria for user stories
+tags: [ba, acceptance-criteria, given-when-then, testing]
+---
+
 # Writing Acceptance Criteria
 
 ## Format: Given / When / Then

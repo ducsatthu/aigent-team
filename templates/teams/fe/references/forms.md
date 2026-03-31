@@ -1,3 +1,10 @@
+---
+title: Forms
+description: React Hook Form with Zod validation patterns, error handling, and form UX best practices.
+whenToRead: When building or reviewing form components and validation logic
+tags: [frontend, forms, validation, react-hook-form]
+---
+
 # Forms
 
 ## Stack: React Hook Form + Zod

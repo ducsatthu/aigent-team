@@ -1,3 +1,10 @@
+---
+title: Infrastructure Security
+description: Least-privilege IAM patterns, network segmentation, secrets rotation, image scanning, and audit logging.
+whenToRead: When configuring IAM policies, network rules, secrets management, or security scanning
+tags: [devops, security, iam, secrets]
+---
+
 # Security Reference
 
 ## Least Privilege IAM

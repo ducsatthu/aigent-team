@@ -1,3 +1,14 @@
+---
+name: API Load Test
+description: Validate endpoint performance under load using k6, autocannon, or hey and analyze bottlenecks
+trigger: When validating endpoint performance under load, before a release with traffic expectations, or investigating latency issues.
+useCases:
+  - BE Agent benchmarking a new endpoint before production release
+  - QA Agent running performance regression tests in CI
+  - DevOps Agent investigating latency spikes in a production service
+tags: [be, performance, load-testing, benchmarking]
+---
+
 # Skill: API Load Test
 
 **Trigger**: When validating endpoint performance under load, before a release with traffic expectations, or investigating latency issues.

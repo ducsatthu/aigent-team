@@ -1,3 +1,10 @@
+---
+title: Frontend Testing
+description: Behavior-driven testing philosophy, AAA pattern, component and integration test strategies, and coverage guidelines.
+whenToRead: When writing or reviewing frontend tests or setting up test infrastructure
+tags: [frontend, testing, vitest, react-testing-library]
+---
+
 # Frontend Testing
 
 ## Testing Philosophy

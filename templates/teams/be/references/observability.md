@@ -1,3 +1,10 @@
+---
+title: Observability
+description: Standards for structured logging, distributed tracing, and metrics collection across backend services.
+whenToRead: When adding logging, tracing, metrics, or setting up monitoring for a service
+tags: [be, observability, logging, monitoring]
+---
+
 # Observability
 
 ## Three Pillars

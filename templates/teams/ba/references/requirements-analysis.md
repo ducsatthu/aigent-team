@@ -1,3 +1,10 @@
+---
+title: Requirements Analysis
+description: Structured framework for breaking down business requirements into scope, assumptions, and dependencies.
+whenToRead: When analyzing a new feature request or breaking down business requirements
+tags: [ba, requirements, analysis, scoping]
+---
+
 # Requirements Analysis
 
 ## Analysis Framework

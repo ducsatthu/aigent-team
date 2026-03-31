@@ -1,3 +1,10 @@
+---
+title: Kubernetes Operations
+description: Namespace strategy, resource management, probes, PodDisruptionBudgets, network policies, and secrets handling.
+whenToRead: When creating or reviewing Kubernetes manifests and cluster configurations
+tags: [devops, kubernetes, orchestration, manifests]
+---
+
 # Kubernetes Reference
 
 ## Namespace Strategy

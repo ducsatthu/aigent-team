@@ -1,3 +1,10 @@
+---
+title: User Story Mapping
+description: Techniques for organizing user stories into activity hierarchies and prioritizing MVP scope.
+whenToRead: When mapping user journeys, decomposing epics, or prioritizing stories for MVP
+tags: [ba, user-stories, story-mapping, prioritization]
+---
+
 # User Story Mapping
 
 ## Story Map Structure

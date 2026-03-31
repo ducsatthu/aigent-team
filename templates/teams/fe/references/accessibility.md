@@ -1,3 +1,10 @@
+---
+title: Accessibility (WCAG 2.1 AA)
+description: Keyboard navigation, ARIA patterns, color contrast, screen reader support, and focus management rules.
+whenToRead: When building or reviewing UI components for accessibility compliance
+tags: [frontend, accessibility, wcag, aria]
+---
+
 # Accessibility (WCAG 2.1 AA)
 
 ## Keyboard Navigation

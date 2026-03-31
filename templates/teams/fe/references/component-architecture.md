@@ -1,3 +1,10 @@
+---
+title: Component Architecture
+description: Props interface design, file structure conventions, composition patterns, and component responsibility boundaries.
+whenToRead: When designing new components or refactoring existing component structure
+tags: [frontend, components, architecture, react]
+---
+
 # Component Architecture
 
 ## Props Interface Design

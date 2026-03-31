@@ -1,3 +1,10 @@
+---
+title: Test Code Review Checklist
+description: Section-by-section checklist for reviewing PRs that add or modify test code, covering level selection, assertions, and isolation.
+whenToRead: When reviewing any pull request that touches test files.
+tags: [qa, review, checklist, code-review]
+---
+
 # Test Code Review Checklist
 
 Use this checklist when reviewing any PR that adds or modifies test code.

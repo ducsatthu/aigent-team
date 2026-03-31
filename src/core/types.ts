@@ -21,6 +21,13 @@ export const PLUGIN_BUNDLE_DIRS: Record<Platform, string> = {
   antigravity: 'antigravity-plugin',
 };
 
+// ---- Content Layers ----
+
+export const CONTENT_LAYERS = ['L0', 'L1', 'L2', 'L3', 'L4', 'L5', 'L6', 'L7', 'L8'] as const;
+export type ContentLayer = (typeof CONTENT_LAYERS)[number];
+
+export type LoadingStrategy = 'always' | 'on-invocation' | 'on-demand' | 'never';
+
 // ---- Reference File ----
 
 export interface ReferenceFile {
@@ -29,6 +36,7 @@ export interface ReferenceFile {
   description: string;
   whenToRead: string;
   content: string;
+  tags?: string[];
 }
 
 // ---- Skill File (on-demand executable procedure) ----
@@ -39,6 +47,8 @@ export interface SkillFile {
   description: string;
   trigger: string;
   content: string;
+  useCases?: string[];
+  tags?: string[];
 }
 
 // ---- Agent Definition (Single Source of Truth) ----

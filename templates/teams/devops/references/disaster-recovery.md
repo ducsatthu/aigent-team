@@ -1,3 +1,10 @@
+---
+title: Disaster Recovery
+description: RPO/RTO tier definitions, backup strategies, failover procedures, and chaos engineering practices.
+whenToRead: When planning DR strategy, configuring backups, or running failover tests
+tags: [devops, disaster-recovery, backups, failover]
+---
+
 # Disaster Recovery Reference
 
 ## RPO / RTO Tiers

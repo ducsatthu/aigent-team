@@ -1,3 +1,10 @@
+---
+title: Task Decomposition
+description: Framework for analyzing tasks, identifying dependencies, and breaking work into parallelizable single-agent subtasks.
+whenToRead: When breaking down a new feature or task into subtasks for assignment to team agents.
+tags: [lead, decomposition, planning, orchestration]
+---
+
 # Task Decomposition
 
 ## Analysis Framework

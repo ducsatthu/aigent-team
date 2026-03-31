@@ -1,3 +1,10 @@
+---
+title: CI/CD Pipeline Design
+description: Pipeline architecture patterns, stage ordering, caching strategies, and deployment automation.
+whenToRead: When designing, reviewing, or troubleshooting CI/CD pipelines
+tags: [devops, ci-cd, automation, deployment]
+---
+
 # CI/CD Reference
 
 ## Pipeline Stages

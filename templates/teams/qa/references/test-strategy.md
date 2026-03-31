@@ -1,3 +1,10 @@
+---
+title: Test Strategy
+description: Test pyramid enforcement ratios, time budgets per CI level, and mutation testing configuration guidance.
+whenToRead: When planning a new test suite, reviewing pyramid balance, or setting up mutation testing.
+tags: [qa, strategy, test-pyramid, mutation-testing]
+---
+
 # Test Strategy Reference
 
 ## Test Pyramid Enforcement
