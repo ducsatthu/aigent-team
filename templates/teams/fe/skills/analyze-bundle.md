@@ -7,6 +7,11 @@ useCases:
   - Lead Agent requesting a performance review after adding new features
   - FE Agent investigating slow page load times reported by QA
 tags: [fe, performance, bundle, dependencies]
+governance:
+  version: "1.0.0"
+  owner: fe-team
+  status: active
+  lastReviewedAt: "2025-03-15"
 ---
 
 # Skill: Analyze Bundle Size

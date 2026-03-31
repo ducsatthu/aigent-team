@@ -4,6 +4,76 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.4.0] - 2026-03-31
+
+### Added
+
+- **9-Layer Skill Content Architecture (L0–L8)** — Structured content management across all agent templates:
+
+  - **L0 Use Case / L1 Metadata / L2 Core Skill / L3 References (Phase 1 — Frontmatter Infrastructure)**
+    - YAML frontmatter parsing with `gray-matter` for all markdown files (skills, references, examples, contracts, scripts, assets)
+    - Skills now have `name`, `description`, `trigger`, `useCases`, `tags` populated from frontmatter
+    - References now have `title`, `description`, `whenToRead`, `tags` populated from frontmatter
+    - Skill catalog table in agent index shows `trigger` column when available
+    - Reference catalog table shows `whenToRead` for on-demand loading guidance
+    - All 12 built-in skills and 42 references enriched with frontmatter metadata
+    - Backward compatible — files without frontmatter still work
+
+  - **L4 Examples (Phase 2)**
+    - `ExampleFile` type — few-shot examples for AI output quality
+    - `examples/` directory per agent with frontmatter: `name`, `description`, `skillRef`, `tags`
+    - Examples catalog table in agent skill index
+    - Proof-of-concept: BA acceptance criteria example, FE component audit example
+    - All 4 platform compilers + plugin bundles support examples
+
+  - **L5 Scripts (Phase 3)**
+    - `ScriptFile` type with `language` field (auto-inferred from extension: `.sh`→bash, `.py`→python, `.js`→javascript, `.ts`→typescript)
+    - `scripts/` directory per agent, scanning `*.{md,sh,py,js,ts}`
+    - Scripts catalog table in agent skill index
+    - Proof-of-concept: DevOps health-check script
+
+  - **L6 Assets (Phase 3)**
+    - `AssetFile` type with `format` field (auto-inferred: `.md`→markdown, `.json`→json, `.yaml`→yaml, `.html`→html)
+    - `assets/` directory per agent, scanning `*.{md,json,yaml,yml,html}`
+    - Assets catalog table in agent skill index
+    - Proof-of-concept: BA story template, QA test report template
+
+  - **L7 Output Contracts (Phase 2)**
+    - `OutputContract` type — self-validation rubrics and checklists
+    - `output-contracts/` directory per agent with frontmatter: `name`, `description`, `skillRef`, `format`, `tags`
+    - Output contracts catalog table in agent skill index
+    - Proof-of-concept: BA user story rubric, QA test plan rubric
+
+  - **L8 Governance (Phase 4)**
+    - `GovernanceMetadata` — `version`, `owner`, `status` (`draft`/`active`/`review-needed`/`deprecated`), `lastReviewedAt`, `deprecatedReason`
+    - Governance parsed from skill frontmatter, **excluded from AI output** (manifest/audit only)
+    - Governance entries included in plugin `manifest.json`
+    - Proof-of-concept governance on 4 skills: active, review-needed, draft, deprecated
+
+- **`aigent-team audit` command** — Report skill governance status:
+  - Status breakdown: active, draft, review-needed, deprecated, no status
+  - Error: deprecated skills (exits with code 1)
+  - Warning: skills needing review, missing governance metadata
+  - Info: draft skills, missing version/owner/trigger
+
+- **Generate scopes** expanded: `--scope examples`, `--scope output-contracts`, `--scope scripts`, `--scope assets`
+- **Interactive wizard** updated with Examples, Output Contracts, Scripts, Assets checkboxes
+- **Plugin manifest** (`manifest.json`) now includes `files.examples`, `files.outputContracts`, `files.scripts`, `files.assets` counts and optional `governance` array
+- **`PLUGIN_ARTIFACT_CATEGORIES`** expanded with `examples`, `contracts`, `scripts`, `assets`
+- **Local overrides** support for all new content types in `.aigent-team/teams/{role}/`
+- **`ContentLayer`** and **`LoadingStrategy`** types for future progressive loading
+
+### Changed
+
+- `AgentDefinition` extended with `examples`, `outputContracts`, `scripts`, `assets` fields
+- `SkillFile` extended with optional `governance` field
+- `GENERATE_SCOPES` expanded: `all | agents | skills | references | examples | output-contracts | scripts | assets | plugin`
+- `BaseCompiler` extended with `compileAllExamples()`, `compileAllOutputContracts()`, `compileAllScripts()`, `compileAllAssets()` (default no-op)
+- All 4 platform compilers implement examples, contracts, scripts, assets compilation + plugin bundle sections
+- `plugin-loader` reads examples, contracts, scripts, assets from plugin bundles
+- `assembleSkillIndex()` now includes catalog tables for all content layers
+- CLI version bumped to 0.4.0
+
 ## [0.3.0] - 2026-03-30
 
 ### Added

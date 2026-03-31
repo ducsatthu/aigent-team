@@ -7,6 +7,11 @@ useCases:
   - Lead Agent requesting story breakdown for a feature
   - BA Agent preparing a backlog refinement session with the team
 tags: [ba, planning, user-stories, decomposition]
+governance:
+  version: "1.1.0"
+  owner: ba-team
+  status: review-needed
+  lastReviewedAt: "2025-01-10"
 ---
 
 # Skill: Story Decomposition

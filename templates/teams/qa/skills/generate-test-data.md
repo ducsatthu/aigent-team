@@ -7,6 +7,10 @@ useCases:
   - BE Agent creating seed data for integration tests with complex entity relationships
   - QA Agent generating boundary-value data sets for input validation testing
 tags: [qa, testing, test-data, fixtures, e2e]
+governance:
+  version: "0.5.0"
+  status: deprecated
+  deprecatedReason: "Replaced by data-factory skill in v2.0"
 ---
 
 # Skill: Generate Test Data

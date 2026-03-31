@@ -39,6 +39,18 @@ export interface ReferenceFile {
   tags?: string[];
 }
 
+// ---- Governance Metadata (L8 — not loaded into AI, manifest/audit only) ----
+
+export type GovernanceStatus = 'draft' | 'active' | 'review-needed' | 'deprecated';
+
+export interface GovernanceMetadata {
+  version?: string;
+  owner?: string;
+  status?: GovernanceStatus;
+  lastReviewedAt?: string;
+  deprecatedReason?: string;
+}
+
 // ---- Skill File (on-demand executable procedure) ----
 
 export interface SkillFile {
@@ -49,6 +61,7 @@ export interface SkillFile {
   content: string;
   useCases?: string[];
   tags?: string[];
+  governance?: GovernanceMetadata;
 }
 
 // ---- Example File (L4 — few-shot examples for AI output quality) ----
@@ -212,6 +225,13 @@ export interface PluginPlatformBundle {
   artifacts: Partial<Record<PluginArtifactCategory, number>>;
 }
 
+export interface SkillGovernanceEntry {
+  skillId: string;
+  agentId: string;
+  name: string;
+  governance: GovernanceMetadata;
+}
+
 export interface PluginManifest {
   name: string;
   version: string;
@@ -232,6 +252,7 @@ export interface PluginManifest {
   };
   formatVersion?: number;
   bundles?: PluginPlatformBundle[];
+  governance?: SkillGovernanceEntry[];
 }
 
 // ---- Install Record ----

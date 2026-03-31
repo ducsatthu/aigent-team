@@ -7,6 +7,10 @@ useCases:
   - Lead Agent coordinating an emergency rollback during an incident
   - DevOps Agent executing a planned rollback after failed canary analysis
 tags: [devops, rollback, deployment, incident-response]
+governance:
+  version: "0.9.0"
+  owner: devops-team
+  status: draft
 ---
 
 # Skill: Rollback Procedure

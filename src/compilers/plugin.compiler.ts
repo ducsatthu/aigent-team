@@ -6,6 +6,7 @@ import type {
   PluginAgentMeta,
   PluginManifest,
   PluginPlatformBundle,
+  SkillGovernanceEntry,
 } from '../core/types.js';
 import { PLUGIN_BUNDLE_DIRS } from '../core/types.js';
 
@@ -64,6 +65,24 @@ export class PluginCompiler {
       },
       bundles,
     };
+
+    // Governance entries (only for skills that have governance metadata)
+    const governanceEntries: SkillGovernanceEntry[] = [];
+    for (const agent of agents) {
+      for (const skill of agent.skills) {
+        if (skill.governance) {
+          governanceEntries.push({
+            skillId: skill.id,
+            agentId: agent.id,
+            name: skill.name,
+            governance: skill.governance,
+          });
+        }
+      }
+    }
+    if (governanceEntries.length) {
+      manifest.governance = governanceEntries;
+    }
 
     outputs.push({
       filePath: `${pluginDir}/manifest.json`,

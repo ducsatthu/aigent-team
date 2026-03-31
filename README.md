@@ -49,10 +49,19 @@ Each agent is a senior-level specialist (8+ years expertise) with deep knowledge
        └─────┘  └─────┘ └─────┘ └──────┘  └───────┘
 ```
 
-Each agent has three layers of knowledge:
-- **Rules** (~30-50 lines) — always loaded, top of context. Hard constraints: scope limits, prohibited actions, escalation triggers, output requirements.
-- **Skill index** (~80-150 lines) — always loaded. Core principles, anti-patterns, decision frameworks, reference + skill catalogs.
-- **Reference files** (3-9 per agent) + **Skill files** (2+ per agent) — loaded on-demand when the task requires deep knowledge or executable procedures.
+Each agent has a 9-layer content architecture (L0–L8):
+
+| Layer | Content | Loading |
+|-------|---------|---------|
+| **L0** Use Case | Agent identity + role description | Always |
+| **L1** Metadata | Frontmatter: name, trigger, tags, whenToRead | Always (catalog) |
+| **L2** Core Skill | Rules (~30-50 lines) + skill index (~80-150 lines) | Always |
+| **L3** References | Deep reference docs (3-9 per agent) | On-demand |
+| **L4** Examples | Few-shot examples for output quality | On-demand |
+| **L5** Scripts | Automation and validation scripts | On-demand |
+| **L6** Assets | Templates, report formats, checklists | On-demand |
+| **L7** Output Contracts | Self-validation rubrics | On-demand |
+| **L8** Governance | Version, owner, review status (manifest only) | Never (audit) |
 
 This keeps the always-loaded context slim while providing access to thousands of lines of senior expertise when needed.
 
@@ -91,7 +100,7 @@ npx aigent-team generate
 
 When run without flags, an interactive wizard lets you choose:
 - **Generate mode**: Platform configs or Plugin bundle
-- **Scopes**: Agents, Skills, References
+- **Scopes**: Agents, Skills, References, Examples, Output Contracts, Scripts, Assets
 - **Team agents**: which roles to generate
 - **Target platforms**: which platforms to generate for
 
@@ -186,6 +195,31 @@ npx aigent-team validate
 
 Checks generated files against each platform's constraints (file size, frontmatter format, naming).
 
+### Audit
+
+```bash
+npx aigent-team audit
+```
+
+Reports skill governance status across all agents:
+- **Status breakdown**: active, draft, review-needed, deprecated
+- **Errors**: deprecated skills (exits with code 1 for CI integration)
+- **Warnings**: skills needing review, missing governance metadata
+- **Info**: draft skills, missing version/owner
+
+Skills opt into governance via frontmatter:
+
+```yaml
+---
+name: Analyze Bundle Size
+governance:
+  version: "1.0.0"
+  owner: fe-team
+  status: active
+  lastReviewedAt: "2025-03-15"
+---
+```
+
 ## Configuration
 
 Create `aigent-team.config.json` (or `.ts` / `.js`) in your project root:
@@ -250,8 +284,10 @@ npx aigent-team generate --platform claude-code    # Single platform
 npx aigent-team generate --scope skills            # Only skill files
 npx aigent-team generate --team fe,be              # Only FE + BE agents
 npx aigent-team generate --scope plugin            # Plugin bundle
+npx aigent-team generate --scope examples,scripts  # Only examples + scripts
 npx aigent-team install ./plugin --force           # Install plugin
 npx aigent-team uninstall my-app                   # Remove plugin
+npx aigent-team audit                              # Governance audit
 ```
 
 ## Generated output
@@ -261,13 +297,17 @@ After running `aigent-team generate`, you'll see:
 ```
 # Claude Code
 .claude/agents/fe-agent.md               # Rules + skill index (always loaded)
-.claude/agents/fe-agent/references/       # Deep reference docs
+.claude/agents/fe-agent/references/       # Deep reference docs (L3)
   ├── component-architecture.md
   ├── state-management.md
   └── ...
-.claude/agents/fe-agent/skills/           # Executable procedures
+.claude/agents/fe-agent/skills/           # Executable procedures (L2)
   ├── analyze-bundle.md
   └── component-audit.md
+.claude/agents/fe-agent/examples/         # Few-shot examples (L4)
+.claude/agents/fe-agent/contracts/        # Output contracts (L7)
+.claude/agents/fe-agent/scripts/          # Automation scripts (L5)
+.claude/agents/fe-agent/assets/           # Templates & resources (L6)
 CLAUDE.md                                 # Agent team overview
 
 # Cursor
@@ -415,6 +455,7 @@ This mirrors how a real tech lead operates — delegating to specialists and ens
 | [Agent Reference](docs/base/agents.md) | All 6 agents — roles, capabilities, reference file catalog |
 | [Vision & Roadmap](docs/base/vision.md) | Future plans, design principles, platform expansion |
 | [RFC-001: Scope & Plugin](docs/rfcs/rfc-001-generate-scope.md) | `--scope`, `--team`, plugin system design |
+| [RFC-002: Content Layers](docs/rfcs/rfc-002-skill-content-layers.md) | 9-layer architecture (L0–L8), frontmatter, governance |
 | [Contributing](CONTRIBUTING.md) | Development setup, how to add agents/compilers |
 | [Changelog](CHANGELOG.md) | Release history |
 

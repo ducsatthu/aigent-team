@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 import matter from 'gray-matter';
 import { deepmerge } from 'deepmerge-ts';
-import type { AgentDefinition, AigentTeamConfig, AssetFile, ExampleFile, OutputContract, ReferenceFile, ScriptFile, SkillFile, TeamRole } from './types.js';
+import type { AgentDefinition, AigentTeamConfig, AssetFile, ExampleFile, GovernanceMetadata, GovernanceStatus, OutputContract, ReferenceFile, ScriptFile, SkillFile, TeamRole } from './types.js';
 
 // Resolve package root: works both in src/ (dev) and dist/ (built)
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -65,6 +65,24 @@ function loadReferences(refsDir: string): ReferenceFile[] {
   return refs;
 }
 
+const GOVERNANCE_STATUSES = ['draft', 'active', 'review-needed', 'deprecated'];
+
+function parseGovernance(data: Record<string, unknown>): GovernanceMetadata | undefined {
+  const gov = data.governance as Record<string, unknown> | undefined;
+  if (!gov) return undefined;
+
+  const result: GovernanceMetadata = {};
+  if (typeof gov.version === 'string') result.version = gov.version;
+  if (typeof gov.owner === 'string') result.owner = gov.owner;
+  if (typeof gov.status === 'string' && GOVERNANCE_STATUSES.includes(gov.status)) {
+    result.status = gov.status as GovernanceStatus;
+  }
+  if (typeof gov.lastReviewedAt === 'string') result.lastReviewedAt = gov.lastReviewedAt;
+  if (typeof gov.deprecatedReason === 'string') result.deprecatedReason = gov.deprecatedReason;
+
+  return Object.keys(result).length > 0 ? result : undefined;
+}
+
 function loadSkills(skillsDir: string): SkillFile[] {
   if (!existsSync(skillsDir)) return [];
   const skills: SkillFile[] = [];
@@ -82,6 +100,7 @@ function loadSkills(skillsDir: string): SkillFile[] {
       content,
       useCases: (data.useCases as string[]) || undefined,
       tags: (data.tags as string[]) || undefined,
+      governance: parseGovernance(data),
     });
   }
 

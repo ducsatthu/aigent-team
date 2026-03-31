@@ -7,6 +7,7 @@ import { runGenerate } from '../src/cli/generate.js';
 import { runValidate } from '../src/cli/validate.js';
 import { runInstall } from '../src/cli/install.js';
 import { runUninstall } from '../src/cli/uninstall.js';
+import { runAudit } from '../src/cli/audit.js';
 import { PLATFORMS, GENERATE_SCOPES, TEAM_ROLES } from '../src/core/types.js';
 import type { Platform, GenerateScope, TeamRole } from '../src/core/types.js';
 
@@ -15,7 +16,7 @@ const program = new Command();
 program
   .name('aigent-team')
   .description('Cross-platform AI agent team plugin for Claude Code, Cursor, Codex, and Antigravity')
-  .version('0.2.0');
+  .version('0.4.0');
 
 program
   .command('init')
@@ -109,6 +110,13 @@ program
   .argument('<plugin-name>', 'Name of the plugin to uninstall')
   .action(async (pluginName: string) => {
     await runUninstall(pluginName, process.cwd());
+  });
+
+program
+  .command('audit')
+  .description('Audit skill governance metadata — report deprecated, review-needed, and missing metadata')
+  .action(async () => {
+    await runAudit(process.cwd());
   });
 
 program.parse();
