@@ -59,6 +59,8 @@ export class PluginCompiler {
         references: agents.reduce((sum, a) => sum + a.references.length, 0),
         examples: agents.reduce((sum, a) => sum + (a.examples?.length ?? 0), 0),
         outputContracts: agents.reduce((sum, a) => sum + (a.outputContracts?.length ?? 0), 0),
+        scripts: agents.reduce((sum, a) => sum + (a.scripts?.length ?? 0), 0),
+        assets: agents.reduce((sum, a) => sum + (a.assets?.length ?? 0), 0),
       },
       bundles,
     };

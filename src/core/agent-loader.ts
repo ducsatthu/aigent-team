@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 import matter from 'gray-matter';
 import { deepmerge } from 'deepmerge-ts';
-import type { AgentDefinition, AigentTeamConfig, ExampleFile, OutputContract, ReferenceFile, SkillFile, TeamRole } from './types.js';
+import type { AgentDefinition, AigentTeamConfig, AssetFile, ExampleFile, OutputContract, ReferenceFile, ScriptFile, SkillFile, TeamRole } from './types.js';
 
 // Resolve package root: works both in src/ (dev) and dist/ (built)
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -129,6 +129,68 @@ function loadOutputContracts(contractsDir: string): OutputContract[] {
     });
 }
 
+const SCRIPT_EXTENSIONS = ['.md', '.sh', '.py', '.js', '.ts'];
+
+function inferLanguage(filename: string): string {
+  const ext = filename.slice(filename.lastIndexOf('.'));
+  const map: Record<string, string> = {
+    '.sh': 'bash', '.py': 'python', '.js': 'javascript',
+    '.ts': 'typescript', '.md': 'markdown',
+  };
+  return map[ext] || 'unknown';
+}
+
+function loadScripts(scriptsDir: string): ScriptFile[] {
+  if (!existsSync(scriptsDir)) return [];
+
+  return readdirSync(scriptsDir)
+    .filter((f) => SCRIPT_EXTENSIONS.some((ext) => f.endsWith(ext)))
+    .map((f) => {
+      const raw = readFileSync(resolve(scriptsDir, f), 'utf-8').trim();
+      const { data, content } = parseFrontmatter(raw);
+      const id = f.replace(/\.[^.]+$/, '');
+      return {
+        id,
+        name: (data.name as string) || id.replace(/-/g, ' '),
+        description: (data.description as string) || '',
+        language: (data.language as string) || inferLanguage(f),
+        content,
+        tags: (data.tags as string[]) || undefined,
+      };
+    });
+}
+
+const ASSET_EXTENSIONS = ['.md', '.json', '.yaml', '.yml', '.html'];
+
+function inferFormat(filename: string): string {
+  const ext = filename.slice(filename.lastIndexOf('.'));
+  const map: Record<string, string> = {
+    '.md': 'markdown', '.json': 'json', '.yaml': 'yaml',
+    '.yml': 'yaml', '.html': 'html',
+  };
+  return map[ext] || 'unknown';
+}
+
+function loadAssets(assetsDir: string): AssetFile[] {
+  if (!existsSync(assetsDir)) return [];
+
+  return readdirSync(assetsDir)
+    .filter((f) => ASSET_EXTENSIONS.some((ext) => f.endsWith(ext)))
+    .map((f) => {
+      const raw = readFileSync(resolve(assetsDir, f), 'utf-8').trim();
+      const { data, content } = parseFrontmatter(raw);
+      const id = f.replace(/\.[^.]+$/, '');
+      return {
+        id,
+        name: (data.name as string) || id.replace(/-/g, ' '),
+        description: (data.description as string) || '',
+        format: (data.format as string) || inferFormat(f),
+        content,
+        tags: (data.tags as string[]) || undefined,
+      };
+    });
+}
+
 function loadBuiltinAgent(role: TeamRole): AgentDefinition {
   const teamDir = resolve(TEMPLATES_DIR, 'teams', role);
   const agentYaml = readFileSync(resolve(teamDir, 'agent.yaml'), 'utf-8');
@@ -144,11 +206,13 @@ function loadBuiltinAgent(role: TeamRole): AgentDefinition {
   // New: load reference files
   const references = loadReferences(resolve(teamDir, 'references'));
 
-  // Load rules, skills, examples, output contracts
+  // Load rules, skills, examples, output contracts, scripts, assets
   const rulesContent = readIfExists(resolve(teamDir, 'rules.md'));
   const skills = loadSkills(resolve(teamDir, 'skills'));
   const examples = loadExamples(resolve(teamDir, 'examples'));
   const outputContracts = loadOutputContracts(resolve(teamDir, 'output-contracts'));
+  const scripts = loadScripts(resolve(teamDir, 'scripts'));
+  const assets = loadAssets(resolve(teamDir, 'assets'));
 
   return {
     id: agentDef.id,
@@ -168,6 +232,8 @@ function loadBuiltinAgent(role: TeamRole): AgentDefinition {
     skills,
     examples,
     outputContracts,
+    scripts,
+    assets,
     globs: agentDef.globs || [],
   };
 }
@@ -250,6 +316,18 @@ export function loadAgents(
       const localContracts = loadOutputContracts(resolve(localDir, 'output-contracts'));
       if (localContracts.length) {
         agent.outputContracts = [...agent.outputContracts, ...localContracts];
+      }
+
+      // Merge local scripts
+      const localScripts = loadScripts(resolve(localDir, 'scripts'));
+      if (localScripts.length) {
+        agent.scripts = [...agent.scripts, ...localScripts];
+      }
+
+      // Merge local assets
+      const localAssets = loadAssets(resolve(localDir, 'assets'));
+      if (localAssets.length) {
+        agent.assets = [...agent.assets, ...localAssets];
       }
     }
 

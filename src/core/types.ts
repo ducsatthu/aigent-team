@@ -8,10 +8,10 @@ export type Platform = (typeof PLATFORMS)[number];
 export const TEAM_ROLES = ['lead', 'ba', 'fe', 'be', 'qa', 'devops'] as const;
 export type TeamRole = (typeof TEAM_ROLES)[number];
 
-export const GENERATE_SCOPES = ['all', 'agents', 'skills', 'references', 'examples', 'output-contracts', 'plugin'] as const;
+export const GENERATE_SCOPES = ['all', 'agents', 'skills', 'references', 'examples', 'output-contracts', 'scripts', 'assets', 'plugin'] as const;
 export type GenerateScope = (typeof GENERATE_SCOPES)[number];
 
-export const PLUGIN_ARTIFACT_CATEGORIES = ['rules', 'skills', 'agents', 'kb', 'examples', 'contracts', 'ai'] as const;
+export const PLUGIN_ARTIFACT_CATEGORIES = ['rules', 'skills', 'agents', 'kb', 'examples', 'contracts', 'scripts', 'assets', 'ai'] as const;
 export type PluginArtifactCategory = (typeof PLUGIN_ARTIFACT_CATEGORIES)[number];
 
 export const PLUGIN_BUNDLE_DIRS: Record<Platform, string> = {
@@ -74,6 +74,28 @@ export interface OutputContract {
   tags?: string[];
 }
 
+// ---- Script File (L5 — automation, validation scripts) ----
+
+export interface ScriptFile {
+  id: string;
+  name: string;
+  description: string;
+  language: string;
+  content: string;
+  tags?: string[];
+}
+
+// ---- Asset File (L6 — templates, report formats, checklists) ----
+
+export interface AssetFile {
+  id: string;
+  name: string;
+  description: string;
+  format: string;
+  content: string;
+  tags?: string[];
+}
+
 // ---- Agent Definition (Single Source of Truth) ----
 
 export interface TechStackConfig {
@@ -112,6 +134,8 @@ export interface AgentDefinition {
   skills: SkillFile[];
   examples: ExampleFile[];
   outputContracts: OutputContract[];
+  scripts: ScriptFile[];
+  assets: AssetFile[];
   globs?: string[];
 }
 
@@ -203,6 +227,8 @@ export interface PluginManifest {
     references: number;
     examples: number;
     outputContracts: number;
+    scripts: number;
+    assets: number;
   };
   formatVersion?: number;
   bundles?: PluginPlatformBundle[];

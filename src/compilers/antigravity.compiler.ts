@@ -1,5 +1,5 @@
 import { BaseCompiler } from './base.compiler.js';
-import { assembleExample, assembleOutputContract, assembleReference, assembleSkill, assembleSkillIndex } from '../core/template-engine.js';
+import { assembleAsset, assembleExample, assembleOutputContract, assembleReference, assembleScript, assembleSkill, assembleSkillIndex } from '../core/template-engine.js';
 import type { AgentDefinition, AigentTeamConfig, CompiledOutput, Platform, ValidationResult } from '../core/types.js';
 
 // Tool name mapping: canonical → Antigravity
@@ -114,6 +114,28 @@ export class AntigravityCompiler extends BaseCompiler {
     return outputs;
   }
 
+  protected compileAllScripts(agents: AgentDefinition[]): CompiledOutput[] {
+    const outputs: CompiledOutput[] = [];
+    for (const agent of agents) {
+      outputs.push(...this.compileScriptFiles(
+        agent,
+        `.agents/skills/${agent.id}-agent/scripts`,
+      ));
+    }
+    return outputs;
+  }
+
+  protected compileAllAssets(agents: AgentDefinition[]): CompiledOutput[] {
+    const outputs: CompiledOutput[] = [];
+    for (const agent of agents) {
+      outputs.push(...this.compileAssetFiles(
+        agent,
+        `.agents/skills/${agent.id}-agent/assets`,
+      ));
+    }
+    return outputs;
+  }
+
   compilePluginBundle(
     agents: AgentDefinition[],
     _config: AigentTeamConfig,
@@ -203,6 +225,30 @@ export class AntigravityCompiler extends BaseCompiler {
         outputs.push({
           filePath: `${rootDir}/contracts/${agent.id}/${contract.id}.md`,
           content: assembleOutputContract(contract) + '\n',
+          overwriteStrategy: 'replace',
+        });
+      }
+    }
+
+    // scripts/ → script files organized by agent
+    for (const agent of agents) {
+      if (!agent.scripts?.length) continue;
+      for (const script of agent.scripts) {
+        outputs.push({
+          filePath: `${rootDir}/scripts/${agent.id}/${script.id}.md`,
+          content: assembleScript(script) + '\n',
+          overwriteStrategy: 'replace',
+        });
+      }
+    }
+
+    // assets/ → asset files organized by agent
+    for (const agent of agents) {
+      if (!agent.assets?.length) continue;
+      for (const asset of agent.assets) {
+        outputs.push({
+          filePath: `${rootDir}/assets/${agent.id}/${asset.id}.md`,
+          content: assembleAsset(asset) + '\n',
           overwriteStrategy: 'replace',
         });
       }

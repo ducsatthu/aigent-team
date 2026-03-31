@@ -1,4 +1,4 @@
-import { assembleExample, assembleOutputContract, assembleReference, assembleSkill } from '../core/template-engine.js';
+import { assembleAsset, assembleExample, assembleOutputContract, assembleReference, assembleScript, assembleSkill } from '../core/template-engine.js';
 import type { AgentDefinition, AigentTeamConfig, CompiledOutput, GenerateScope, Platform, PluginArtifactCategory, ValidationResult } from '../core/types.js';
 
 export abstract class BaseCompiler {
@@ -30,6 +30,8 @@ export abstract class BaseCompiler {
         normalized.add('references');
         normalized.add('examples');
         normalized.add('output-contracts');
+        normalized.add('scripts');
+        normalized.add('assets');
       } else {
         normalized.add(s);
       }
@@ -52,6 +54,12 @@ export abstract class BaseCompiler {
     }
     if (normalized.has('output-contracts')) {
       outputs.push(...this.compileAllOutputContracts(agents));
+    }
+    if (normalized.has('scripts')) {
+      outputs.push(...this.compileAllScripts(agents));
+    }
+    if (normalized.has('assets')) {
+      outputs.push(...this.compileAllAssets(agents));
     }
 
     return outputs;
@@ -119,6 +127,24 @@ export abstract class BaseCompiler {
    * Compile all output contract files. Default no-op — override in subclasses.
    */
   protected compileAllOutputContracts(
+    _agents: AgentDefinition[],
+  ): CompiledOutput[] {
+    return [];
+  }
+
+  /**
+   * Compile all script files. Default no-op — override in subclasses.
+   */
+  protected compileAllScripts(
+    _agents: AgentDefinition[],
+  ): CompiledOutput[] {
+    return [];
+  }
+
+  /**
+   * Compile all asset files. Default no-op — override in subclasses.
+   */
+  protected compileAllAssets(
     _agents: AgentDefinition[],
   ): CompiledOutput[] {
     return [];
@@ -192,6 +218,40 @@ export abstract class BaseCompiler {
     return agent.outputContracts.map((contract) => ({
       filePath: `${baseDir}/${contract.id}${extension}`,
       content: assembleOutputContract(contract) + '\n',
+      overwriteStrategy: 'replace' as const,
+    }));
+  }
+
+  /**
+   * Compile script files for an agent into a given directory.
+   */
+  protected compileScriptFiles(
+    agent: AgentDefinition,
+    baseDir: string,
+    extension: string = '.md',
+  ): CompiledOutput[] {
+    if (!agent.scripts?.length) return [];
+
+    return agent.scripts.map((script) => ({
+      filePath: `${baseDir}/${script.id}${extension}`,
+      content: assembleScript(script) + '\n',
+      overwriteStrategy: 'replace' as const,
+    }));
+  }
+
+  /**
+   * Compile asset files for an agent into a given directory.
+   */
+  protected compileAssetFiles(
+    agent: AgentDefinition,
+    baseDir: string,
+    extension: string = '.md',
+  ): CompiledOutput[] {
+    if (!agent.assets?.length) return [];
+
+    return agent.assets.map((asset) => ({
+      filePath: `${baseDir}/${asset.id}${extension}`,
+      content: assembleAsset(asset) + '\n',
       overwriteStrategy: 'replace' as const,
     }));
   }

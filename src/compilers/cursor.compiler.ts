@@ -1,5 +1,5 @@
 import { BaseCompiler } from './base.compiler.js';
-import { assembleExample, assembleOutputContract, assembleReference, assembleSkill, assembleSkillIndex } from '../core/template-engine.js';
+import { assembleAsset, assembleExample, assembleOutputContract, assembleReference, assembleScript, assembleSkill, assembleSkillIndex } from '../core/template-engine.js';
 import { toKebabCursorPluginId } from './cursor-ide-plugin.compiler.js';
 import type { AgentDefinition, AigentTeamConfig, CompiledOutput, Platform, ValidationResult } from '../core/types.js';
 
@@ -126,6 +126,30 @@ export class CursorCompiler extends BaseCompiler {
       outputs.push(...this.compileOutputContracts(
         agent,
         `.cursor/rules/${agent.id}-contracts`,
+        '.mdc',
+      ));
+    }
+    return outputs;
+  }
+
+  protected compileAllScripts(agents: AgentDefinition[]): CompiledOutput[] {
+    const outputs: CompiledOutput[] = [];
+    for (const agent of agents) {
+      outputs.push(...this.compileScriptFiles(
+        agent,
+        `.cursor/rules/${agent.id}-scripts`,
+        '.mdc',
+      ));
+    }
+    return outputs;
+  }
+
+  protected compileAllAssets(agents: AgentDefinition[]): CompiledOutput[] {
+    const outputs: CompiledOutput[] = [];
+    for (const agent of agents) {
+      outputs.push(...this.compileAssetFiles(
+        agent,
+        `.cursor/rules/${agent.id}-assets`,
         '.mdc',
       ));
     }
@@ -261,6 +285,42 @@ export class CursorCompiler extends BaseCompiler {
         outputs.push({
           filePath: `${rootDir}/contracts/${agent.id}/${contract.id}.mdc`,
           content: `${cFrontmatter}\n\n${assembleOutputContract(contract)}\n`,
+          overwriteStrategy: 'replace',
+        });
+      }
+    }
+
+    // scripts/ → script files organized by agent
+    for (const agent of agents) {
+      if (!agent.scripts?.length) continue;
+      const globs = agent.globs?.length ? agent.globs.join(', ') : undefined;
+      for (const script of agent.scripts) {
+        const sFrontmatter = this.formatFrontmatter({
+          description: `${agent.name} script: ${script.name}`,
+          alwaysApply: false,
+          globs: globs || undefined,
+        });
+        outputs.push({
+          filePath: `${rootDir}/scripts/${agent.id}/${script.id}.mdc`,
+          content: `${sFrontmatter}\n\n${assembleScript(script)}\n`,
+          overwriteStrategy: 'replace',
+        });
+      }
+    }
+
+    // assets/ → asset files organized by agent
+    for (const agent of agents) {
+      if (!agent.assets?.length) continue;
+      const globs = agent.globs?.length ? agent.globs.join(', ') : undefined;
+      for (const asset of agent.assets) {
+        const aFrontmatter = this.formatFrontmatter({
+          description: `${agent.name} asset: ${asset.name}`,
+          alwaysApply: false,
+          globs: globs || undefined,
+        });
+        outputs.push({
+          filePath: `${rootDir}/assets/${agent.id}/${asset.id}.mdc`,
+          content: `${aFrontmatter}\n\n${assembleAsset(asset)}\n`,
           overwriteStrategy: 'replace',
         });
       }

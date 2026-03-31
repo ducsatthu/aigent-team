@@ -28,6 +28,8 @@ export function createMockAgent(overrides: Partial<AgentDefinition> = {}): Agent
     skills: [],
     examples: [],
     outputContracts: [],
+    scripts: [],
+    assets: [],
     globs: ['**/*.tsx'],
     ...overrides,
   };

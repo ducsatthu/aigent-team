@@ -79,6 +79,8 @@ async function promptGenerateOptions(configTeams: readonly string[], configPlatf
         { name: 'References', value: 'references', checked: true },
         { name: 'Examples', value: 'examples', checked: true },
         { name: 'Output Contracts', value: 'output-contracts', checked: true },
+        { name: 'Scripts', value: 'scripts', checked: true },
+        { name: 'Assets', value: 'assets', checked: true },
       ],
     },
     {

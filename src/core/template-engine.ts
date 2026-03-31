@@ -1,4 +1,4 @@
-import type { AgentDefinition, ExampleFile, OutputContract, ReferenceFile, SkillFile } from './types.js';
+import type { AgentDefinition, AssetFile, ExampleFile, OutputContract, ReferenceFile, ScriptFile, SkillFile } from './types.js';
 
 /**
  * Assemble the slim skill index for an agent (~150-200 lines).
@@ -91,6 +91,38 @@ export function assembleSkillIndex(agent: AgentDefinition): string {
     ].join('\n'));
   }
 
+  // Scripts catalog table (if any scripts exist)
+  if (agent.scripts?.length) {
+    const scriptLines = agent.scripts.map(
+      (s) => `| \`${s.id}\` | ${s.name} | ${s.language} |`
+    );
+    parts.push([
+      '## Scripts',
+      '',
+      'Available automation and validation scripts:',
+      '',
+      '| Script | Name | Language |',
+      '|--------|------|----------|',
+      ...scriptLines,
+    ].join('\n'));
+  }
+
+  // Assets catalog table (if any assets exist)
+  if (agent.assets?.length) {
+    const assetLines = agent.assets.map(
+      (a) => `| \`${a.id}\` | ${a.name} | ${a.format} |`
+    );
+    parts.push([
+      '## Assets',
+      '',
+      'Available templates and resource files:',
+      '',
+      '| Asset | Name | Format |',
+      '|-------|------|--------|',
+      ...assetLines,
+    ].join('\n'));
+  }
+
   return parts.join('\n\n');
 }
 
@@ -169,4 +201,18 @@ export function assembleExample(example: ExampleFile): string {
  */
 export function assembleOutputContract(contract: OutputContract): string {
   return contract.content;
+}
+
+/**
+ * Format a single script file for output.
+ */
+export function assembleScript(script: ScriptFile): string {
+  return script.content;
+}
+
+/**
+ * Format a single asset file for output.
+ */
+export function assembleAsset(asset: AssetFile): string {
+  return asset.content;
 }
